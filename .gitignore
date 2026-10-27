@@ -12,5 +12,6 @@ venv/
 # Large generated files (kept locally, not in git)
 artifacts/embeddings/*
 artifacts/onnx/*
+artifacts/library/
 !artifacts/**/.gitkeep
 tools/browser_bench/vendor/

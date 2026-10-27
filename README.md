@@ -1,4 +1,4 @@
-# GoogleForXrays (working name)
+# FindXRay
 
 Upload a chest X-ray and see the most similar past cases, what they were diagnosed with, and a draft report that cites them.
 
@@ -7,7 +7,9 @@ Upload a chest X-ray and see the most similar past cases, what they were diagnos
 ## Status
 - [x] Retrieval benchmark: encoder comparison on IU X-ray (notebook 01)
 - [x] Browser speed test of the int8 encoder (~0.5 s per X-ray, multi-threaded WASM)
-- [ ] Search API + LangGraph report agent + Langfuse tracing
+- [x] Search API (reproduces the benchmark exactly through HTTP; ~2 ms per search)
+- [x] Case images for the results (unmodified copies on Hugging Face)
+- [ ] LangGraph report agent + Langfuse tracing
 - [ ] Report-quality evaluation
 - [ ] Frontend + deployment
 
@@ -26,7 +28,9 @@ Compressed to int8 for the browser: 86 MB (from 330 MB), no measurable loss in r
 
 ## Layout
 ```
-src/casefinder/      metrics.py (retrieval metrics), labels.py (MeSH -> finding groups)
+src/casefinder/      metrics.py (retrieval metrics), labels.py (MeSH -> finding groups),
+                     search.py (in-memory case library), api.py (FastAPI: /search, /health)
+scripts/             build_library.py (builds artifacts/library), check_api_against_benchmark.py
 tests/               unit tests for the above
 notebooks/           Kaggle notebooks; build_*.py regenerates them from tested code
 results/             metric CSVs from each notebook run
@@ -41,6 +45,13 @@ pip install -e ".[dev]"
 pytest
 ```
 
+## Run the search API locally
+```
+python scripts/build_library.py                 # once: builds artifacts/library from data/splits.csv + embeddings
+uvicorn casefinder.api:app --app-dir src        # http://127.0.0.1:8000/docs
+python scripts/check_api_against_benchmark.py   # optional: all 720 test queries through HTTP vs notebook 01
+```
+
 ## Data and model credits
-- Indiana University chest X-ray collection via Open-i (U.S. National Library of Medicine), CC BY-NC-ND 4.0.
+- Indiana University chest X-ray collection via Open-i (U.S. National Library of Medicine), CC BY-NC-ND 4.0. Library images re-shared unmodified at [tush-2ar/findxray-case-library](https://huggingface.co/datasets/tush-2ar/findxray-case-library).
 - RAD-DINO (Microsoft), MIT licence. BiomedCLIP (Microsoft). DINOv2 (Meta).
