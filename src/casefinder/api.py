@@ -8,6 +8,8 @@ Environment:
   CASEFINDER_LIBRARY   path to artifacts/library (default: <repo>/artifacts/library)
   CASEFINDER_ORIGINS   comma-separated allowed browser origins (default: http://localhost:8000)
   CASEFINDER_IMAGE_URL image URL template with {uid} (default: the public Hugging Face case library)
+  GEMINI_API_KEY       enables POST /report (draft report agent); GEMINI_MODEL picks the model
+  LANGFUSE_*           enables tracing of /report runs (see casefinder.agent.tracing)
 
 Case images must be loaded with <img crossorigin="anonymous">: the app page is cross-origin
 isolated (needed for multi-threaded WASM), and Hugging Face sends CORS headers but no
@@ -16,6 +18,9 @@ Cross-Origin-Resource-Policy, so a plain <img> is blocked by the browser.
 
 from __future__ import annotations
 
+import base64
+import binascii
+import logging
 import math
 import os
 from contextlib import asynccontextmanager
@@ -28,11 +33,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
+from casefinder.agent import ReportResult, XRayImage, run_report
+from casefinder.agent.tracing import callback_handlers, trace_attributes, trace_url
 from casefinder.search import CaseLibrary
+
+log = logging.getLogger("findxray")
 
 DEFAULT_LIBRARY = Path(__file__).resolve().parents[2] / "artifacts" / "library"
 MAX_K = 20
 DEFAULT_IMAGE_URL = "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/{uid}.jpg"
+
+
+MAX_IMAGE_BYTES = 8 * 2**20
+IMAGE_SIGNATURES = {"image/jpeg": b"\xff\xd8\xff", "image/png": b"\x89PNG\r\n\x1a\n"}
 
 
 class SearchRequest(BaseModel):
@@ -45,6 +58,22 @@ class SearchRequest(BaseModel):
         if not all(math.isfinite(x) for x in v):
             raise ValueError("embedding contains NaN or infinite values")
         return v
+
+
+class ReportRequest(SearchRequest):
+    image_base64: str = Field(..., description="The X-ray file, base64-encoded (JPEG or PNG, max 8 MB).")
+    mime_type: str = Field(..., pattern="^image/(jpeg|png)$")
+
+    def decoded_image(self) -> XRayImage:
+        if len(self.image_base64) > MAX_IMAGE_BYTES * 4 // 3 + 4:
+            raise ValueError("image is larger than 8 MB")
+        try:
+            data = base64.b64decode(self.image_base64, validate=True)
+        except (binascii.Error, ValueError) as e:
+            raise ValueError("image_base64 is not valid base64") from e
+        if not data.startswith(IMAGE_SIGNATURES[self.mime_type]):
+            raise ValueError(f"file content is not {self.mime_type}")
+        return XRayImage(data=data, mime_type=self.mime_type)
 
 
 class CaseOut(BaseModel):
@@ -64,10 +93,11 @@ class SearchResponse(BaseModel):
     results: list[CaseOut]
 
 
-def create_app(library: CaseLibrary | None = None) -> FastAPI:
+def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.library = library or CaseLibrary.load(os.environ.get("CASEFINDER_LIBRARY", DEFAULT_LIBRARY))
+        app.state.report_model = report_model
         yield
 
     app = FastAPI(title="FindXRay", version="0.1.0", lifespan=lifespan)
@@ -109,6 +139,37 @@ def create_app(library: CaseLibrary | None = None) -> FastAPI:
                 for h in hits
             ],
         )
+
+    def get_report_model():
+        if app.state.report_model is None:
+            if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")):
+                raise HTTPException(503, "report drafting is not configured on this server")
+            from casefinder.agent import GeminiReportModel
+            app.state.report_model = GeminiReportModel()
+        return app.state.report_model
+
+    @app.post("/report", response_model=ReportResult)
+    def report(req: ReportRequest):
+        lib: CaseLibrary = app.state.library
+        if len(req.embedding) != lib.dim:
+            raise HTTPException(422, f"embedding must have {lib.dim} values, got {len(req.embedding)}")
+        try:
+            image = req.decoded_image()
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
+        model = get_report_model()
+        handlers = callback_handlers()
+        try:
+            with trace_attributes(model=model.name, k=req.k, library_size=len(lib)):
+                result = run_report(lib, model, image, np.asarray(req.embedding, dtype=np.float32), k=req.k,
+                                    callbacks=handlers)
+        except Exception as e:  # model/network failures: don't leak internals to the browser
+            log.exception("report generation failed")
+            raise HTTPException(502, f"the report model failed: {type(e).__name__}") from e
+        url = trace_url(handlers)
+        if url:
+            log.info("report trace: %s", url)
+        return result
 
     return app
 

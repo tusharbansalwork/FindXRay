@@ -9,7 +9,7 @@ Upload a chest X-ray and see the most similar past cases, what they were diagnos
 - [x] Browser speed test of the int8 encoder (~0.5 s per X-ray, multi-threaded WASM)
 - [x] Search API (reproduces the benchmark exactly through HTTP; ~2 ms per search)
 - [x] Case images for the results (unmodified copies on Hugging Face)
-- [ ] LangGraph report agent + Langfuse tracing
+- [x] LangGraph report agent + Langfuse tracing (built and tested offline; first real Gemini runs pending)
 - [ ] Report-quality evaluation
 - [ ] Frontend + deployment
 
@@ -29,8 +29,10 @@ Compressed to int8 for the browser: 86 MB (from 330 MB), no measurable loss in r
 ## Layout
 ```
 src/casefinder/      metrics.py (retrieval metrics), labels.py (MeSH -> finding groups),
-                     search.py (in-memory case library), api.py (FastAPI: /search, /health)
-scripts/             build_library.py (builds artifacts/library), check_api_against_benchmark.py
+                     search.py (in-memory case library), api.py (FastAPI: /search, /report, /health)
+src/casefinder/agent LangGraph report agent: draft -> verify -> revise, Gemini + Langfuse
+scripts/             build_library.py (builds artifacts/library), check_api_against_benchmark.py,
+                     draft_report.py (try the agent on a test X-ray), push_prompts.py (prompts -> Langfuse)
 tests/               unit tests for the above
 notebooks/           Kaggle notebooks; build_*.py regenerates them from tested code
 results/             metric CSVs from each notebook run
@@ -41,7 +43,7 @@ tools/browser_bench/ in-browser encoder speed test
 
 ## Run the tests
 ```
-pip install -e ".[dev]"
+pip install -e ".[dev]"                         # needs Python 3.11+ (Langfuse 5 requires it)
 pytest
 ```
 
@@ -51,6 +53,16 @@ python scripts/build_library.py                 # once: builds artifacts/library
 uvicorn casefinder.api:app --app-dir src        # http://127.0.0.1:8000/docs
 python scripts/check_api_against_benchmark.py   # optional: all 720 test queries through HTTP vs notebook 01
 ```
+
+## Try the report agent
+```
+copy .env.example .env                          # then fill in GEMINI_API_KEY and the LANGFUSE_* keys
+python scripts/push_prompts.py                  # once, and after editing prompts: versions them in Langfuse
+python scripts/draft_report.py                  # drafts a report for a random held-out test X-ray
+uvicorn casefinder.api:app --app-dir src --env-file .env   # serves /search and /report
+```
+Drafting sends the uploaded X-ray to Google's Gemini API. Langfuse traces record prompts, outputs and timings,
+but the image is replaced by a placeholder before upload. Use public or sample X-rays only, never real patient data.
 
 ## Data and model credits
 - Indiana University chest X-ray collection via Open-i (U.S. National Library of Medicine), CC BY-NC-ND 4.0. Library images re-shared unmodified at [tush-2ar/findxray-case-library](https://huggingface.co/datasets/tush-2ar/findxray-case-library).
