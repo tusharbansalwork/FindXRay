@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Secrets
+.env
+
+# Large generated files (kept locally, not in git)
+artifacts/embeddings/*
+artifacts/onnx/*
+!artifacts/**/.gitkeep
+tools/browser_bench/vendor/

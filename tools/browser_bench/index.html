@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Encoder Speed Test</title>
+<style>
+  :root { --bg:#f7f7f5; --fg:#1b1b1b; --muted:#666; --card:#fff; --line:#ddd; --accent:#0b6e4f; --bad:#b00020; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#141414; --fg:#eee; --muted:#9a9a9a; --card:#1e1e1e; --line:#333; --accent:#4fc59a; --bad:#ff6b81; } }
+  body { background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; margin:0; padding:24px 16px; }
+  main { max-width:900px; margin:0 auto; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  p { color:var(--muted); margin:0 0 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  label { display:block; margin:6px 0; }
+  input[type=text] { width:100%; max-width:520px; padding:4px 6px; }
+  button { padding:8px 12px; margin:4px 6px 4px 0; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th, td { border-bottom:1px solid var(--line); padding:6px; text-align:left; white-space:nowrap; }
+  .scroll { overflow-x:auto; }
+  pre { white-space:pre-wrap; font-size:12px; color:var(--muted); margin:0; }
+  .err { color:var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <h1>X-ray encoder: browser speed test</h1>
+  <p>Measures how long the RAD-DINO 224 encoder takes to embed one X-ray in this browser. Each button reloads the page, because the thread count can only be set once per page load. Results are kept between reloads.</p>
+
+  <div class="card" id="envCard"><pre id="env">checking…</pre></div>
+
+  <div class="card">
+    <label>int8 model URL <input type="text" id="int8Url" value="/artifacts/onnx/rad-dino-224.int8.onnx"></label>
+    <label>fp32 model URL (only for the WebGPU fp32 test) <input type="text" id="fp32Url" value="/artifacts/onnx/rad-dino-224.fp32.onnx"></label>
+    <label>Timed runs per test <input type="number" id="runs" value="10" min="3" max="50"></label>
+    <div>
+      <button class="primary" data-mode="wasm-multi">WASM, all threads (int8)</button>
+      <button class="primary" data-mode="wasm-1">WASM, 1 thread (int8)</button>
+      <button class="primary" data-mode="webgpu-int8">WebGPU (int8)</button>
+      <button class="primary" data-mode="webgpu-fp32">WebGPU (fp32)</button>
+    </div>
+    <div>
+      <button id="copy">Copy results as JSON</button>
+      <button id="clear">Clear results</button>
+    </div>
+    <pre id="log"></pre>
+  </div>
+
+  <div class="card scroll">
+    <table id="table"><thead><tr>
+      <th>test</th><th>threads</th><th>model MB</th><th>load+fetch ms</th><th>session ms</th><th>first run ms</th><th>median ms</th><th>p90 ms</th><th>emb dim</th><th>emb norm</th><th>error</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+</main>
+
+<script src="./vendor/ort.all.min.js"></script>
+<script>
+const CROP = 224;
+const KEY = "encoder-bench-results";
+const $ = (id) => document.getElementById(id);
+const logEl = $("log");
+const log = (s) => { logEl.textContent += s + "\n"; };
+
+function loadResults() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+function saveResults(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); } catch {} }
+
+function render() {
+  const tb = $("table").querySelector("tbody");
+  tb.innerHTML = "";
+  for (const r of loadResults()) {
+    const tr = document.createElement("tr");
+    const cells = [r.test, r.threads, r.modelMB, r.fetchMs, r.sessionMs, r.firstMs, r.medianMs, r.p90Ms, r.embDim, r.embNorm, r.error || ""];
+    for (const c of cells) {
+      const td = document.createElement("td");
+      td.textContent = (typeof c === "number") ? (Number.isInteger(c) ? c : c.toFixed(c < 10 ? 3 : 0)) : (c ?? "");
+      if (c === r.error && r.error) td.className = "err";
+      tr.appendChild(td);
+    }
+    tb.appendChild(tr);
+  }
+}
+
+async function envInfo() {
+  const env = {
+    userAgent: navigator.userAgent,
+    logicalCores: navigator.hardwareConcurrency,
+    deviceMemoryGB: navigator.deviceMemory ?? "n/a",
+    crossOriginIsolated: self.crossOriginIsolated,
+    webgpu: !!navigator.gpu,
+    ortVersion: ort.env.versions?.web ?? "unknown",
+  };
+  if (navigator.gpu) {
+    try {
+      const a = await navigator.gpu.requestAdapter();
+      env.webgpuAdapter = a ? [a.info?.vendor, a.info?.architecture, a.info?.description].filter(Boolean).join(" ") || "available" : "no adapter";
+    } catch (e) { env.webgpuAdapter = "error: " + e.message; }
+  }
+  $("env").textContent = Object.entries(env).map(([k, v]) => `${k}: ${v}`).join("\n")
+    + (env.crossOriginIsolated ? "" : "\n\nNOT cross-origin isolated: multi-threaded WASM is unavailable. Open this page through serve.py.");
+  return env;
+}
+
+function randomInput() {
+  const n = 3 * CROP * CROP, x = new Float32Array(n);
+  for (let i = 0; i < n; i++) x[i] = (Math.random() + Math.random() + Math.random() - 1.5) * 2;
+  return x;
+}
+
+async function runTest(mode, env, params) {
+  const runs = Math.max(3, parseInt(params.get("runs") || "10", 10));
+  const useFp32 = mode === "webgpu-fp32";
+  const url = params.get(useFp32 ? "fp32" : "int8");
+  const row = { test: mode, browser: env.userAgent, cores: env.logicalCores, isolated: env.crossOriginIsolated, adapter: env.webgpuAdapter ?? null, runs };
+
+  ort.env.wasm.wasmPaths = new URL("./vendor/", location.href).href;
+  ort.env.wasm.numThreads = mode === "wasm-1" ? 1 : 0;   // 0 = let ORT choose (default for the real app)
+  const opts = { executionProviders: mode.startsWith("webgpu") ? ["webgpu"] : ["wasm"], graphOptimizationLevel: "all" };
+
+  try {
+    log(`[${mode}] fetching ${url}`);
+    let t = performance.now();
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url} — is the model in artifacts/onnx/?`);
+    const buf = new Uint8Array(await res.arrayBuffer());
+    row.modelMB = buf.byteLength / 2 ** 20;
+    row.fetchMs = performance.now() - t;
+
+    log(`[${mode}] creating session`);
+    t = performance.now();
+    const sess = await ort.InferenceSession.create(buf, opts);
+    row.sessionMs = performance.now() - t;
+    row.threads = mode.startsWith("webgpu") ? "gpu" : ort.env.wasm.numThreads;
+
+    const feeds = { [sess.inputNames[0]]: new ort.Tensor("float32", randomInput(), [1, 3, CROP, CROP]) };
+    t = performance.now();
+    let out = await sess.run(feeds);
+    row.firstMs = performance.now() - t;
+
+    const times = [];
+    for (let i = 0; i < runs; i++) {
+      t = performance.now();
+      out = await sess.run(feeds);
+      times.push(performance.now() - t);
+      log(`[${mode}] run ${i + 1}/${runs}: ${times[i].toFixed(0)} ms`);
+    }
+    times.sort((a, b) => a - b);
+    row.medianMs = times[Math.floor(times.length / 2)];
+    row.p90Ms = times[Math.min(times.length - 1, Math.ceil(0.9 * times.length) - 1)];
+    const emb = out[sess.outputNames[0]].data;
+    row.embDim = emb.length;
+    row.embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0));
+    await sess.release();
+  } catch (e) {
+    row.error = String(e && e.message ? e.message : e);
+    log(`[${mode}] ERROR: ${row.error}`);
+  }
+  const all = loadResults(); all.push(row); saveResults(all); render();
+  log(`[${mode}] done`);
+}
+
+document.querySelectorAll("button[data-mode]").forEach((b) => b.addEventListener("click", () => {
+  const p = new URLSearchParams({ mode: b.dataset.mode, runs: $("runs").value, int8: $("int8Url").value, fp32: $("fp32Url").value });
+  location.search = p.toString();
+}));
+$("copy").addEventListener("click", async () => {
+  const text = JSON.stringify(loadResults(), null, 2);
+  try { await navigator.clipboard.writeText(text); log("Copied results to clipboard."); }
+  catch { logEl.textContent = text; log("\n(Clipboard blocked: copy the JSON above by hand.)"); }
+});
+$("clear").addEventListener("click", () => { saveResults([]); render(); logEl.textContent = ""; });
+
+(async () => {
+  render();
+  const params = new URLSearchParams(location.search);
+  if (params.get("int8")) $("int8Url").value = params.get("int8");
+  if (params.get("fp32")) $("fp32Url").value = params.get("fp32");
+  if (params.get("runs")) $("runs").value = params.get("runs");
+  const env = await envInfo();
+  const mode = params.get("mode");
+  if (mode) {
+    history.replaceState(null, "", location.pathname);   // a manual refresh won't re-run the test
+    await runTest(mode, env, params);
+  }
+})();
+</script>
+</body>
+</html>
