@@ -55,12 +55,12 @@ def callback_handlers() -> list:
     return [CallbackHandler()]
 
 
-def trace_attributes(**metadata):
-    """Names the trace and attaches metadata (e.g. model, k) when Langfuse is on."""
+def trace_attributes(name: str = "findxray-report", tags: list[str] | None = None, **metadata):
+    """Names the trace and attaches tags/metadata (e.g. model, k) when Langfuse is on."""
     if not langfuse_configured():
         return nullcontext()
     from langfuse import propagate_attributes
-    return propagate_attributes(trace_name="findxray-report", tags=["findxray"],
+    return propagate_attributes(trace_name=name, tags=["findxray", *(tags or [])],
                                 metadata={k: str(v) for k, v in metadata.items()})
 
 

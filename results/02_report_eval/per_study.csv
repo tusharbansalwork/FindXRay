@@ -1,0 +1,201 @@
+uid,system,f1_14,ref_normal,pred_normal,ref_labels,pred_labels
+509,nearest_case,0.5714285714285714,0,0,Lung Opacity;Pleural Effusion;Support Devices,Cardiomegaly;Lung Opacity;Pneumothorax;Pleural Effusion
+509,image_only,0.6666666666666666,0,0,Lung Opacity;Pleural Effusion;Support Devices,Lung Opacity;Atelectasis;Pleural Effusion
+509,agent_draft,0.8571428571428571,0,0,Lung Opacity;Pleural Effusion;Support Devices,Lung Opacity;Pneumothorax;Pleural Effusion;Support Devices
+509,agent_final,0.75,0,0,Lung Opacity;Pleural Effusion;Support Devices,Lung Opacity;Atelectasis;Pneumothorax;Pleural Effusion;Support Devices
+3392,nearest_case,1.0,1,1,No Finding,No Finding
+3392,image_only,1.0,1,1,No Finding,No Finding
+3392,agent_draft,1.0,1,1,No Finding,No Finding
+3392,agent_final,1.0,1,1,No Finding,No Finding
+2386,nearest_case,1.0,0,0,,
+2386,image_only,0.0,0,0,,Lung Lesion
+2386,agent_draft,1.0,0,0,,
+2386,agent_final,1.0,0,0,,
+187,nearest_case,0.0,0,1,,No Finding
+187,image_only,0.0,0,0,,Cardiomegaly
+187,agent_draft,0.0,0,1,,No Finding
+187,agent_final,0.0,0,1,,No Finding
+173,nearest_case,0.0,0,1,,No Finding
+173,image_only,0.0,0,1,,No Finding
+173,agent_draft,0.0,0,1,,No Finding
+173,agent_final,0.0,0,1,,No Finding
+553,nearest_case,0.0,0,0,,Lung Opacity;Pleural Effusion
+553,image_only,0.0,0,1,,No Finding
+553,agent_draft,0.0,0,0,,Lung Opacity;Atelectasis
+553,agent_final,0.0,0,0,,Lung Opacity;Atelectasis
+1295,nearest_case,0.0,0,0,,Enlarged Cardiomediastinum;Atelectasis
+1295,image_only,0.0,0,1,,No Finding
+1295,agent_draft,1.0,0,0,,
+1295,agent_final,1.0,0,0,,
+1376,nearest_case,1.0,0,0,,
+1376,image_only,0.0,0,1,,No Finding
+1376,agent_draft,1.0,0,0,,
+1376,agent_final,1.0,0,0,,
+2960,nearest_case,1.0,1,1,No Finding,No Finding
+2960,image_only,1.0,1,1,No Finding,No Finding
+2960,agent_draft,1.0,1,1,No Finding,No Finding
+2960,agent_final,1.0,1,1,No Finding,No Finding
+3470,nearest_case,0.0,0,0,,Pleural Other
+3470,image_only,0.0,0,1,,No Finding
+3470,agent_draft,1.0,0,0,,
+3470,agent_final,1.0,0,0,,
+161,nearest_case,0.6666666666666666,0,0,Atelectasis,Atelectasis;Pleural Effusion
+161,image_only,0.0,0,1,Atelectasis,Support Devices;No Finding
+161,agent_draft,0.0,0,0,Atelectasis,
+161,agent_final,0.0,0,0,Atelectasis,
+3225,nearest_case,0.0,1,0,No Finding,Cardiomegaly
+3225,image_only,0.0,1,0,No Finding,Cardiomegaly;Lung Lesion
+3225,agent_draft,0.0,1,0,No Finding,Cardiomegaly
+3225,agent_final,0.0,1,0,No Finding,Cardiomegaly
+1166,nearest_case,0.0,0,0,Lung Opacity;Atelectasis,
+1166,image_only,0.0,0,1,Lung Opacity;Atelectasis,No Finding
+1166,agent_draft,0.0,0,0,Lung Opacity;Atelectasis,
+1166,agent_final,0.0,0,0,Lung Opacity;Atelectasis,
+3752,nearest_case,0.6666666666666666,0,0,Enlarged Cardiomediastinum;Cardiomegaly,Cardiomegaly
+3752,image_only,0.5,0,0,Enlarged Cardiomediastinum;Cardiomegaly,Cardiomegaly;Atelectasis
+3752,agent_draft,0.6666666666666666,0,0,Enlarged Cardiomediastinum;Cardiomegaly,Cardiomegaly
+3752,agent_final,0.6666666666666666,0,0,Enlarged Cardiomediastinum;Cardiomegaly,Cardiomegaly
+3951,nearest_case,0.6666666666666666,0,0,Lung Lesion;Pneumonia,Pneumonia
+3951,image_only,0.4,0,0,Lung Lesion;Pneumonia,Lung Opacity;Lung Lesion;Consolidation
+3951,agent_draft,0.5,0,0,Lung Lesion;Pneumonia,Lung Opacity;Pneumonia
+3951,agent_final,0.5,0,0,Lung Lesion;Pneumonia,Lung Opacity;Pneumonia
+2351,nearest_case,0.0,0,1,,No Finding
+2351,image_only,0.0,0,1,,Support Devices;No Finding
+2351,agent_draft,0.0,0,0,,Support Devices
+2351,agent_final,0.0,0,0,,Support Devices
+1317,nearest_case,0.0,0,0,Atelectasis,
+1317,image_only,1.0,0,0,Atelectasis,Atelectasis
+1317,agent_draft,0.6666666666666666,0,0,Atelectasis,Lung Opacity;Atelectasis
+1317,agent_final,0.6666666666666666,0,0,Atelectasis,Lung Opacity;Atelectasis
+2579,nearest_case,1.0,1,1,No Finding,No Finding
+2579,image_only,1.0,1,1,No Finding,No Finding
+2579,agent_draft,1.0,1,1,No Finding,No Finding
+2579,agent_final,1.0,1,1,No Finding,No Finding
+3384,nearest_case,1.0,1,1,No Finding,No Finding
+3384,image_only,1.0,1,1,No Finding,No Finding
+3384,agent_draft,1.0,1,1,No Finding,No Finding
+3384,agent_final,1.0,1,1,No Finding,No Finding
+1595,nearest_case,0.5,0,0,Cardiomegaly;Lung Opacity,Cardiomegaly;Edema
+1595,image_only,0.0,0,1,Cardiomegaly;Lung Opacity,No Finding
+1595,agent_draft,0.6666666666666666,0,0,Cardiomegaly;Lung Opacity,Enlarged Cardiomediastinum;Cardiomegaly;Lung Opacity;Atelectasis
+1595,agent_final,0.6666666666666666,0,0,Cardiomegaly;Lung Opacity,Enlarged Cardiomediastinum;Cardiomegaly;Lung Opacity;Atelectasis
+31,nearest_case,0.0,0,1,Enlarged Cardiomediastinum,No Finding
+31,image_only,0.0,0,0,Enlarged Cardiomediastinum,Lung Opacity;Atelectasis
+31,agent_draft,0.0,0,0,Enlarged Cardiomediastinum,Atelectasis
+31,agent_final,0.0,0,0,Enlarged Cardiomediastinum,Atelectasis
+1005,nearest_case,0.0,1,0,No Finding,
+1005,image_only,1.0,1,1,No Finding,No Finding
+1005,agent_draft,0.0,1,0,No Finding,
+1005,agent_final,0.0,1,0,No Finding,
+3938,nearest_case,1.0,1,1,No Finding,No Finding
+3938,image_only,0.0,1,0,No Finding,Cardiomegaly
+3938,agent_draft,0.0,1,0,No Finding,
+3938,agent_final,1.0,1,1,No Finding,No Finding
+1920,nearest_case,0.0,1,0,No Finding,Cardiomegaly
+1920,image_only,0.0,1,0,No Finding,Cardiomegaly
+1920,agent_draft,0.0,1,0,No Finding,Cardiomegaly
+1920,agent_final,0.0,1,0,No Finding,Cardiomegaly
+3881,nearest_case,0.0,0,0,Support Devices,Lung Opacity;Atelectasis
+3881,image_only,0.6666666666666666,0,1,Support Devices,Support Devices;No Finding
+3881,agent_draft,0.5,0,0,Support Devices,Cardiomegaly;Atelectasis;Support Devices
+3881,agent_final,0.5,0,0,Support Devices,Cardiomegaly;Atelectasis;Support Devices
+985,nearest_case,1.0,1,1,No Finding,No Finding
+985,image_only,0.0,1,0,No Finding,
+985,agent_draft,1.0,1,1,No Finding,No Finding
+985,agent_final,1.0,1,1,No Finding,No Finding
+1253,nearest_case,1.0,1,1,No Finding,No Finding
+1253,image_only,1.0,1,1,No Finding,No Finding
+1253,agent_draft,0.0,1,0,No Finding,
+1253,agent_final,0.0,1,0,No Finding,
+1904,nearest_case,1.0,0,0,,
+1904,image_only,0.0,0,1,,No Finding
+1904,agent_draft,1.0,0,0,,
+1904,agent_final,1.0,0,0,,
+3956,nearest_case,0.0,1,0,No Finding,Cardiomegaly;Atelectasis
+3956,image_only,0.0,1,0,No Finding,Cardiomegaly;Support Devices
+3956,agent_draft,0.0,1,0,No Finding,Cardiomegaly;Atelectasis
+3956,agent_final,0.0,1,0,No Finding,Cardiomegaly;Atelectasis
+549,nearest_case,0.5714285714285714,0,0,Lung Opacity;Pleural Other,Lung Opacity;Pneumonia;Atelectasis;Pleural Other;Support Devices
+549,image_only,0.0,0,0,Lung Opacity;Pleural Other,Lung Lesion
+549,agent_draft,0.8,0,0,Lung Opacity;Pleural Other,Lung Opacity;Atelectasis;Pleural Other
+549,agent_final,0.8,0,0,Lung Opacity;Pleural Other,Lung Opacity;Atelectasis;Pleural Other
+2140,nearest_case,0.0,0,0,Fracture,
+2140,image_only,0.0,0,1,Fracture,No Finding
+2140,agent_draft,0.0,0,0,Fracture,
+2140,agent_final,0.0,0,0,Fracture,
+576,nearest_case,0.4,0,0,Cardiomegaly;Atelectasis;Pleural Effusion,Lung Opacity;Atelectasis
+576,image_only,0.5714285714285714,0,0,Cardiomegaly;Atelectasis;Pleural Effusion,Cardiomegaly;Lung Opacity;Atelectasis;Support Devices
+576,agent_draft,0.5714285714285714,0,0,Cardiomegaly;Atelectasis;Pleural Effusion,Enlarged Cardiomediastinum;Cardiomegaly;Lung Opacity;Atelectasis
+576,agent_final,0.5714285714285714,0,0,Cardiomegaly;Atelectasis;Pleural Effusion,Enlarged Cardiomediastinum;Cardiomegaly;Lung Opacity;Atelectasis
+2033,nearest_case,0.0,0,0,Support Devices,Cardiomegaly;Atelectasis
+2033,image_only,0.0,0,0,Support Devices,Cardiomegaly;Atelectasis
+2033,agent_draft,0.0,0,0,Support Devices,Cardiomegaly;Atelectasis
+2033,agent_final,0.0,0,0,Support Devices,Cardiomegaly;Atelectasis
+1929,nearest_case,0.0,0,0,Lung Opacity;Atelectasis;Fracture,
+1929,image_only,0.0,0,1,Lung Opacity;Atelectasis;Fracture,No Finding
+1929,agent_draft,0.8,0,0,Lung Opacity;Atelectasis;Fracture,Lung Opacity;Atelectasis
+1929,agent_final,0.8,0,0,Lung Opacity;Atelectasis;Fracture,Lung Opacity;Atelectasis
+3474,nearest_case,0.0,0,0,,Lung Opacity;Atelectasis
+3474,image_only,0.0,0,0,,Lung Opacity
+3474,agent_draft,0.0,0,0,,Atelectasis
+3474,agent_final,0.0,0,0,,Atelectasis
+1531,nearest_case,0.0,0,1,,No Finding
+1531,image_only,0.0,0,1,,No Finding
+1531,agent_draft,1.0,0,0,,
+1531,agent_final,1.0,0,0,,
+287,nearest_case,0.0,0,1,Enlarged Cardiomediastinum,No Finding
+287,image_only,0.0,0,0,Enlarged Cardiomediastinum,Cardiomegaly;Atelectasis;Pleural Effusion
+287,agent_draft,0.0,0,0,Enlarged Cardiomediastinum,Cardiomegaly
+287,agent_final,0.0,0,0,Enlarged Cardiomediastinum,Cardiomegaly
+2668,nearest_case,1.0,1,1,No Finding,No Finding
+2668,image_only,1.0,1,1,No Finding,No Finding
+2668,agent_draft,0.0,1,0,No Finding,
+2668,agent_final,0.0,1,0,No Finding,
+3090,nearest_case,0.0,0,0,Pleural Effusion,
+3090,image_only,0.6666666666666666,0,0,Pleural Effusion,Atelectasis;Pleural Effusion
+3090,agent_draft,0.6666666666666666,0,0,Pleural Effusion,Enlarged Cardiomediastinum;Pleural Effusion
+3090,agent_final,0.5,0,0,Pleural Effusion,Enlarged Cardiomediastinum;Cardiomegaly;Pleural Effusion
+773,nearest_case,1.0,0,0,,
+773,image_only,0.0,0,0,,Cardiomegaly
+773,agent_draft,1.0,0,0,,
+773,agent_final,1.0,0,0,,
+2125,nearest_case,0.0,0,0,Lung Opacity,
+2125,image_only,0.5,0,0,Lung Opacity,Lung Opacity;Atelectasis;Pleural Effusion
+2125,agent_draft,0.6666666666666666,0,0,Lung Opacity,Lung Opacity;Atelectasis
+2125,agent_final,0.6666666666666666,0,0,Lung Opacity,Lung Opacity;Atelectasis
+465,nearest_case,0.5714285714285714,0,0,Lung Opacity;Atelectasis;Pneumothorax;Pleural Effusion,Lung Opacity;Pneumonia;Atelectasis
+465,image_only,0.3333333333333333,0,0,Lung Opacity;Atelectasis;Pneumothorax;Pleural Effusion,Cardiomegaly;Lung Opacity
+465,agent_draft,0.5714285714285714,0,0,Lung Opacity;Atelectasis;Pneumothorax;Pleural Effusion,Lung Opacity;Pneumonia;Atelectasis
+465,agent_final,0.5714285714285714,0,0,Lung Opacity;Atelectasis;Pneumothorax;Pleural Effusion,Lung Opacity;Pneumonia;Atelectasis
+3182,nearest_case,0.0,0,0,Lung Lesion,Cardiomegaly
+3182,image_only,0.6666666666666666,0,0,Lung Lesion,Cardiomegaly;Lung Lesion
+3182,agent_draft,0.0,0,0,Lung Lesion,Cardiomegaly
+3182,agent_final,0.0,0,0,Lung Lesion,Cardiomegaly
+1681,nearest_case,1.0,1,1,No Finding,No Finding
+1681,image_only,1.0,1,1,No Finding,No Finding
+1681,agent_draft,0.0,1,0,No Finding,
+1681,agent_final,0.0,1,0,No Finding,
+3623,nearest_case,0.0,0,1,Cardiomegaly,No Finding
+3623,image_only,1.0,0,0,Cardiomegaly,Cardiomegaly
+3623,agent_draft,1.0,0,0,Cardiomegaly,Cardiomegaly
+3623,agent_final,1.0,0,0,Cardiomegaly,Cardiomegaly
+3571,nearest_case,0.0,0,0,,Lung Opacity;Atelectasis
+3571,image_only,0.0,0,1,,No Finding
+3571,agent_draft,1.0,0,0,,
+3571,agent_final,1.0,0,0,,
+2046,nearest_case,0.4,0,0,Atelectasis;Pleural Effusion;Fracture,Cardiomegaly;Atelectasis
+2046,image_only,0.8,0,0,Atelectasis;Pleural Effusion;Fracture,Atelectasis;Pleural Effusion
+2046,agent_draft,0.6666666666666666,0,0,Atelectasis;Pleural Effusion;Fracture,Lung Opacity;Atelectasis;Pleural Effusion
+2046,agent_final,0.6666666666666666,0,0,Atelectasis;Pleural Effusion;Fracture,Lung Opacity;Atelectasis;Pleural Effusion
+3313,nearest_case,0.0,0,1,,No Finding
+3313,image_only,0.0,0,1,,No Finding
+3313,agent_draft,0.0,0,1,,No Finding
+3313,agent_final,0.0,0,1,,No Finding
+1145,nearest_case,1.0,0,0,,
+1145,image_only,0.0,0,1,,No Finding
+1145,agent_draft,1.0,0,0,,
+1145,agent_final,1.0,0,0,,
+407,nearest_case,0.0,1,0,No Finding,
+407,image_only,0.0,1,0,No Finding,Cardiomegaly
+407,agent_draft,0.0,1,0,No Finding,Cardiomegaly;Atelectasis
+407,agent_final,0.0,1,0,No Finding,Cardiomegaly;Atelectasis

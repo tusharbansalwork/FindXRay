@@ -86,3 +86,48 @@ Evidence: `tools/browser_bench/` on Tushar's laptop (Chrome 155, Windows, 16 log
 - Retries: LangChain's `max_retries` is the total number of attempts (`max_retries=1` produced `attempts=1`, i.e. no retry; checked in the built request). Now 4 attempts; google-genai backs off exponentially on 429/5xx. Needed in practice: the next real run got 503 UNAVAILABLE ("model is currently experiencing high demand") from Google.
 - Model choice, measured with `scripts/diagnose_gemini.py` on 2026-10-28 (00:56 IST): "reply OK" with a 30 s limit — `gemini-3.7-flash`, `gemini-3.8-flash`, `gemini-flash-latest` timed out (504); `gemini-3.6-flash` 2.2 s, `gemini-3.5-flash` 2.3 s, `gemini-3.5-flash-lite` 1.3 s. Full check on `gemini-3.6-flash`: text 2.8 s, text + image 2.8 s (called study 1212 normal; its label is No Finding), schema without image 3.3 s, schema + image 503 "high demand" after 3.7 s (transient; the agent retries, the diagnostic does not). Default is now `gemini-3.6-flash`; temperature is no longer sent because these models ignore it.
 - Observation for the evaluation: with the schema but no image attached, the model still wrote five confident findings sentences instead of saying no image was provided. The agent always attaches the image, but this is the kind of unsupported claim the verifier and the report evaluation must catch.
+
+## D12 · Report evaluation design — 2026-10-28
+- Sample: 50 held-out test studies with a radiologist report, drawn by shuffling the test split once with seed 42 and taking a prefix (so a larger `--n` extends the same sample). Saved to `results/02_report_eval/sample.csv`.
+- Systems, all on the same studies: (1) **nearest_case** — copy the top-1 retrieved case's report (no LLM); (2) **image_only** — Gemini, same draft prompt, no similar cases; (3) **agent_draft** — the agent's first draft; (4) **agent_final** — the verified report. (2) vs (3) isolates what retrieval adds; (3) vs (4) what verification adds; (4) vs (1) whether the LLM adds anything over copying.
+- Metric: CheXbert (Stanford AIMI weights, via `f1chexbert`) labels 14 CheXpert observations in generated and radiologist reports (positive or uncertain = 1); micro-F1 over 14 and over the standard 5, macro-F1, precision, recall, normal/abnormal agreement. 95% bootstrap CIs over studies, and paired bootstrap CIs for system differences. Macro-F1 follows sklearn (a label absent from both sides scores 0), so it is low on small samples; micro-F1 is the headline.
+- Agent-specific: sentences before/after verification, share removed, revisions, verifier's first-pass support, case citations per sentence, and **citation consistency** (for each asserted finding and each cited case, does that case's report also have the finding per CheXbert) — the direct measure of citation padding seen in the first run.
+- Generation is resumable and records each result immediately (free-tier 503s are routine); traces are tagged `eval-v1`. Langfuse's built-in `run_experiment` was not used because it cannot resume. Per-report scores are attached to the traces with `create_score` instead.
+- Validation before spending API calls: a known-answer fixture of 6 real test studies (agent = the radiologist's own sentences; draft = those plus a false "large right pneumothorax"; image-only = "No acute abnormality" for all). Results matched expectations: agent_final micro-F1 1.000; the false sentence cut draft precision and also recall (it flips CheXbert's "No Finding" on normal studies); verification effect +0.37 [+0.19, +1.00]. Generation was smoke-tested with a stand-in model including a simulated 503 and a resumed rerun.
+- Compatibility: `f1chexbert` 0.0.2 needs `transformers<5` (uses the removed `encode_plus`) and its own downloader uses an argument newer `huggingface_hub` removed, so the checkpoint is fetched with `hf_hub_download` directly.
+- Free-tier rate limits (first evaluation run, 2026-10-28): intermittent 429 RESOURCE_EXHAUSTED on `gemini-3.6-flash`, with successes in between, i.e. a per-minute quota. Google's client retries a 429 within seconds, which cannot clear a per-minute window and spends more quota. Added client-side pacing (LangChain `InMemoryRateLimiter`, `GEMINI_RPM`, default 5 calls/min; verified spacing 2.0 s apart at 30/min). The eval script now keeps the full error text and stops if a daily ("PerDay") quota is hit.
+
+## D13 · Model for evaluation and demo, and agent v2 (checklist + look-again) — 2026-10-28
+- Free-tier daily limits on the FindXRay project: `gemini-3.6-flash` and `gemini-3.8-flash` 20 requests/day each (exhausted by diagnostics and the first runs); `gemini-3.5-flash-lite` 500/day at 15/min. Default model is now Flash-Lite: the only one with room for a 50-study evaluation (~275 calls) and a public demo.
+- v1 on 10 studies (positions 1-10, Flash-Lite, low thinking, medium image resolution): reports were near-templates of a normal study. Missed a pneumothorax (study 1339), effusions (3678) and cardiomegaly with atelectasis (612). The verifier approved 100% of sentences on the first pass and removed nothing; it cannot see omissions, which were the main error. Cases were cited 1.65 times per sentence, mostly for negative statements. All confidence intervals overlapped (n = 10).
+- v2 changes, made together to save quota (no per-change ablation; can be run later):
+  1. image resolution HIGH and thinking level medium (defaults);
+  2. draft prompt v2: systematic review plus a checklist (always-check findings + the finding groups of the similar cases, each with the cases that had it); case citations only for a shared abnormal finding, never for normal statements (verifier and revise prompts updated to match);
+  3. new graph steps `look_again` (a second reader goes through the checklist and returns findings that are present or uncertain but missing from the draft) and `amend` (adds them, fixing contradicting sentences). Disable with `FINDXRAY_LOOK_AGAIN=0`.
+- The image-only baseline uses the same v2 prompt and the fixed always-check list (no retrieved cases), so it differs from the agent only by retrieval and the agent's extra steps.
+- Final numbers come from sample positions 11-60, never used for tuning; positions 1-10 were the tuning set. Results are labelled by config (`v1`, `v2`) and model, and scoring never mixes them.
+- Tests: 71 (look-again path, skip when nothing missed, disable switch, checklist construction); end-to-end smoke test of generation + CheXbert scoring with a stand-in model on positions 2-4.
+
+## D14 · Final report evaluation (v2, held-out positions 11-60) — 2026-10-28
+Evidence: `scripts/eval_score.py --start 11 --end 60`, 50 held-out test studies never used for tuning, `gemini-3.5-flash-lite`, high image resolution, medium thinking. CheXbert labels vs the radiologists' reports; 95% bootstrap CIs.
+
+| System | micro-F1 (14) | micro-F1 (5) | macro-F1 | precision | recall | normal/abnormal acc. |
+|---|---|---|---|---|---|---|
+| Copy nearest case's report | 0.389 [0.282–0.487] | 0.350 | 0.225 | 0.368 | 0.412 | 0.740 |
+| Gemini, no retrieval | 0.374 [0.262–0.485] | 0.391 | 0.210 | 0.319 | 0.451 | 0.540 |
+| Agent, first draft | 0.491 [0.370–0.590] | 0.522 | 0.369 | 0.458 | 0.529 | 0.760 |
+| **Agent, final report** | **0.496** [0.381–0.589] | 0.500 | 0.370 | 0.452 | 0.549 | **0.780** |
+
+Paired differences in micro-F1 (14):
+- agent vs copying the nearest case: **+0.107 [+0.010, +0.204]**
+- agent vs the same model without retrieval: **+0.122 [+0.003, +0.241]**
+- retrieval alone, on the first draft: +0.117 [−0.004, +0.232] (borderline)
+- look-again + verification: +0.005 [−0.019, +0.041] (no measurable effect)
+
+Findings:
+- The agent beats both baselines, with both intervals excluding zero. The gain comes from drafting with retrieved cases, not from the checking steps.
+- The model without retrieval over-calls abnormalities (normal/abnormal accuracy 0.54); with retrieved cases it reaches 0.78.
+- Self-checking is weak. The same-family verifier approved 98.6% of first-draft sentences, revised 6% of reports and removed none; look-again added a finding in 6% of reports. Neither changes the score. Kept in the product because they cost little time (median 16 s per report) and make every sentence traceable, but **not claimed to improve accuracy**. A stronger or different-family checker is the obvious next experiment.
+- Citations: 1.03 case citations per sentence (v1: 1.65, mostly for normal statements); 65% of 146 (finding, cited case) pairs are consistent, i.e. the cited case's report has that finding.
+- Latency: agent median 15.7 s, p90 25.7 s; one Gemini call without retrieval 3.9 s.
+- Caveats: n = 50, so intervals are wide; CheXbert labels are themselves automatic; IU reports are mostly normal; v1 (positions 1-10) is not comparable because it used different studies. 200 per-report scores are attached to the Langfuse traces.

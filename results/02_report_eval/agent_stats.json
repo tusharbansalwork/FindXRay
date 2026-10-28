@@ -1,0 +1,15 @@
+{
+  "sentences_per_report_draft": 5.56,
+  "sentences_per_report_final": 5.58,
+  "removed_share_of_final_draft": 0.0,
+  "reports_needing_revision": 0.06,
+  "first_pass_supported_mean": 0.9858095238095237,
+  "reports_with_missed_findings": 0.06,
+  "missed_findings_added_per_report": 0.06,
+  "case_citations_per_sentence": 1.028673835125448,
+  "citation_consistency": 0.6506849315068494,
+  "citation_pairs": 146,
+  "agent_seconds_median": 15.725,
+  "agent_seconds_p90": 25.679000000000002,
+  "image_only_seconds_median": 3.85
+}

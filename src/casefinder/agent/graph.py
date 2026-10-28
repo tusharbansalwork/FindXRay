@@ -1,4 +1,8 @@
-"""LangGraph workflow: retrieve -> draft -> check -> (revise -> check)* -> finalize.
+"""LangGraph workflow: retrieve -> draft -> look_again -> [amend] -> check -> (revise -> check)* -> finalize.
+
+`look_again` is a second reader: it goes through a checklist (always-check findings plus the findings the
+similar cases had) and reports findings the draft missed; `amend` adds them. It targets omissions, which the
+sentence-level verifier cannot see. Disable with FINDXRAY_LOOK_AGAIN=0.
 
 `check` combines a deterministic citation check (every source must be "image" or a retrieved
 case) with the model's sentence-by-sentence verification. A sentence passes only if both agree.
@@ -6,6 +10,7 @@ case) with the model's sentence-by-sentence verification. A sentence passes only
 
 from __future__ import annotations
 
+import os
 import re
 from typing import TypedDict
 
@@ -14,7 +19,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 
 from casefinder.agent.model import ReportModel, XRayImage
-from casefinder.agent.schemas import CheckedSentence, Report, ReportResult, Verdict
+from casefinder.agent.schemas import CheckedSentence, CheckItem, Report, ReportResult, Verdict
 from casefinder.search import CaseLibrary
 
 MAX_REVISIONS = 2
@@ -28,6 +33,8 @@ class State(TypedDict, total=False):
     k: int
     cases: list[dict]
     report: Report
+    first_draft: Report
+    missed: list[CheckItem]
     verdicts: list[Verdict]
     revisions: int
     first_pass_supported: float
@@ -62,13 +69,30 @@ def merge_verdicts(report: Report, model_verdicts: list[Verdict], problems: dict
     return merged
 
 
+def look_again_enabled() -> bool:
+    return os.environ.get("FINDXRAY_LOOK_AGAIN", "1") not in ("0", "false", "False", "")
+
+
 def build_graph(library: CaseLibrary, model: ReportModel, image: XRayImage):
     def retrieve(state: State) -> State:
         hits = library.search(np.asarray(state["embedding"], dtype=np.float32), k=state.get("k", 5))
         return {"cases": [{**h.case, "similarity": h.similarity, "rank": h.rank} for h in hits]}
 
     def draft(state: State, config: RunnableConfig) -> State:
-        return {"report": model.draft(image, state["cases"], config), "revisions": 0}
+        report = model.draft(image, state["cases"], config)
+        return {"report": report, "first_draft": report, "revisions": 0}
+
+    def look_again(state: State, config: RunnableConfig) -> State:
+        if not state["report"].sentences:
+            return {"missed": []}
+        items = model.look_again(image, state["cases"], state["report"], config).items
+        return {"missed": [i for i in items if i.present in ("yes", "uncertain") and not i.in_draft]}
+
+    def amend(state: State, config: RunnableConfig) -> State:
+        return {"report": model.amend(image, state["cases"], state["report"], state["missed"], config)}
+
+    def after_look_again(state: State) -> str:
+        return "amend" if state.get("missed") else "check"
 
     def check(state: State, config: RunnableConfig) -> State:
         report = state["report"]
@@ -98,7 +122,14 @@ def build_graph(library: CaseLibrary, model: ReportModel, image: XRayImage):
     g.add_node("revise", revise)
     g.add_edge(START, "retrieve")
     g.add_edge("retrieve", "draft")
-    g.add_edge("draft", "check")
+    if look_again_enabled():
+        g.add_node("look_again", look_again)
+        g.add_node("amend", amend)
+        g.add_edge("draft", "look_again")
+        g.add_conditional_edges("look_again", after_look_again, {"amend": "amend", "check": "check"})
+        g.add_edge("amend", "check")
+    else:
+        g.add_edge("draft", "check")
     g.add_conditional_edges("check", route, {"revise": "revise", END: END})
     g.add_edge("revise", "check")
     return g.compile()
@@ -113,6 +144,8 @@ def to_result(state: State, model: ReportModel) -> ReportResult:
         cases=state["cases"],
         revisions=state["revisions"],
         first_pass_supported=state.get("first_pass_supported", 0.0),
+        first_draft=list(state["first_draft"].sentences),
+        missed_findings=list(state.get("missed", [])),
         prompt_versions=dict(model.prompt_versions),
         model=model.name,
     )

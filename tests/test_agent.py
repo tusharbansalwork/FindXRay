@@ -5,6 +5,7 @@ import pytest
 from langchain_core.runnables import RunnableLambda
 
 from casefinder.agent import MAX_REVISIONS, Report, Sentence, Verdict, Verification, XRayImage, run_report
+from casefinder.agent.schemas import CheckItem, LookAgain
 from casefinder.agent.graph import citation_problems
 from casefinder.agent.model import GeminiReportModel, PromptSource
 from casefinder.agent.prompts import LOCAL_PROMPTS
@@ -46,6 +47,17 @@ class ScriptedModel:
         self.calls.append(("revise",))
         return self._revisions.pop(0) if self._revisions else report
 
+    missed: list = []          # findings the scripted second reader reports as missing
+    amended: Report | None = None
+
+    def look_again(self, image, cases, report, config=None):
+        self.calls.append(("look_again",))
+        return LookAgain(items=list(self.missed))
+
+    def amend(self, image, cases, report, missed, config=None):
+        self.calls.append(("amend", [m.finding for m in missed]))
+        return self.amended or report
+
 
 def run(model, k=3):
     return run_report(library(), model, IMG, embedding=np.eye(6)[0], k=k)
@@ -57,7 +69,7 @@ def test_all_supported_needs_no_revision():
     r = run(m)
     assert r.revisions == 0 and len(r.report) == 2 and r.removed == []
     assert r.first_pass_supported == 1.0
-    assert [c[0] for c in m.calls] == ["draft", "verify"]
+    assert [c[0] for c in m.calls] == ["draft", "look_again", "verify"]
     assert m.calls[0][1] is IMG and m.calls[0][2][0] == 10    # image passed through; nearest case first
     assert [c["uid"] for c in r.cases] == [10, 11, 12] and r.cases[0]["similarity"] == pytest.approx(1.0)
 
@@ -136,7 +148,8 @@ def test_gemini_model_builds_multimodal_messages_with_local_prompts():
     assert "case:10 (similarity 0.81)" in text_block["text"] and "impression: Normal." in text_block["text"]
     assert image_block["type"] == "image" and image_block["mime_type"] == "image/jpeg"
     assert base64.b64decode(image_block["base64"]) == IMG.data
-    assert image_block["media_resolution"] == "MEDIA_RESOLUTION_MEDIUM"
+    assert image_block["media_resolution"] == "MEDIA_RESOLUTION_HIGH"
+    assert "Checklist:" in text_block["text"] and "Pneumothorax" in text_block["text"]
     assert m.prompt_versions == {"findxray-draft": "local"}
 
 
@@ -146,11 +159,12 @@ def test_gemini_request_carries_latency_settings():
     m = GeminiReportModel(api_key="test-key", prompts=PromptSource(use_langfuse=False))
     block = {"type": "image", "base64": base64.b64encode(IMG.data).decode(), "mime_type": "image/jpeg",
              "media_resolution": m.media_resolution}
+    assert m.name == "gemini-3.5-flash-lite"
     req = m.llm._prepare_request([HumanMessage(content=[{"type": "text", "text": "x"}, block])])
     image_part = req["contents"][-1].parts[-1]
     assert image_part.inline_data.data == IMG.data
-    assert image_part.media_resolution.level.value == "MEDIA_RESOLUTION_MEDIUM"
-    assert req["config"].thinking_config.thinking_level.value == "LOW"
+    assert image_part.media_resolution.level.value == "MEDIA_RESOLUTION_HIGH"
+    assert req["config"].thinking_config.thinking_level.value == "MEDIUM"
     assert req["config"].http_options.timeout == 180_000
     assert req["config"].http_options.retry_options.attempts == 4   # total attempts, i.e. 3 retries
 
@@ -174,3 +188,67 @@ def test_gemini_model_requires_a_key(monkeypatch):
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
     with pytest.raises(RuntimeError, match="GEMINI_API_KEY"):
         GeminiReportModel(prompts=PromptSource(use_langfuse=False))
+
+
+def test_first_draft_is_kept_for_evaluation():
+    draft = Report(sentences=[S("Heart is enlarged.", "image"), S("BAD nodule.", "image")])
+    m = ScriptedModel(draft, revisions=[Report(sentences=[S("Heart is enlarged.", "image")])])
+    r = run(m)
+    assert [s.text for s in r.first_draft] == ["Heart is enlarged.", "BAD nodule."]
+    assert [s.text for s in r.report] == ["Heart is enlarged."]
+
+
+def test_image_only_draft_prompt_has_no_cases():
+    m = GeminiReportModel(api_key="test-key", prompts=PromptSource(use_langfuse=False))
+    m.llm = FakeStructuredLLM(Report(sentences=[S("Clear lungs.", "image")]))
+    m.draft(IMG, [])
+    text = m.llm.seen[0][1][1].content[0]["text"]
+    assert "No similar cases are provided" in text and "case:" not in text
+
+
+def test_rate_limiter_paces_calls(monkeypatch):
+    monkeypatch.setenv("GEMINI_RPM", "6")
+    m = GeminiReportModel(api_key="test-key", prompts=PromptSource(use_langfuse=False))
+    assert m.llm.rate_limiter is m.rate_limiter
+    assert m.rate_limiter.requests_per_second == pytest.approx(0.1)
+    monkeypatch.setenv("GEMINI_RPM", "0")
+    assert GeminiReportModel(api_key="k", prompts=PromptSource(use_langfuse=False)).llm.rate_limiter is None
+
+
+def item(finding, present, in_draft):
+    return CheckItem(finding=finding, present=present, in_draft=in_draft, evidence="seen")
+
+
+def test_look_again_adds_missed_findings_via_amend():
+    m = ScriptedModel(Report(sentences=[S("Lungs are clear.", "image")]))
+    m.missed = [item("Pleural Effusion", "yes", False), item("Cardiomegaly", "no", True),
+                item("Pneumothorax", "uncertain", False), item("Atelectasis", "yes", True)]
+    m.amended = Report(sentences=[S("Small right pleural effusion.", "image"), S("Possible apical pneumothorax.", "image")])
+    r = run(m)
+    assert ("amend", ["Pleural Effusion", "Pneumothorax"]) in m.calls          # only present/uncertain AND not in draft
+    assert [c[0] for c in m.calls][:4] == ["draft", "look_again", "amend", "verify"]
+    assert [s.text for s in r.report] == ["Small right pleural effusion.", "Possible apical pneumothorax."]
+    assert [s.text for s in r.first_draft] == ["Lungs are clear."]
+    assert [f.finding for f in r.missed_findings] == ["Pleural Effusion", "Pneumothorax"]
+
+
+def test_look_again_without_misses_skips_amend():
+    m = ScriptedModel(Report(sentences=[S("Lungs are clear.", "image")]))
+    m.missed = [item("Pleural Effusion", "no", True)]
+    r = run(m)
+    assert [c[0] for c in m.calls] == ["draft", "look_again", "verify"] and r.missed_findings == []
+
+
+def test_look_again_can_be_disabled(monkeypatch):
+    monkeypatch.setenv("FINDXRAY_LOOK_AGAIN", "0")
+    m = ScriptedModel(Report(sentences=[S("Lungs are clear.", "image")]))
+    run(m)
+    assert [c[0] for c in m.calls] == ["draft", "verify"]
+
+
+def test_checklist_lists_neighbour_findings_with_their_cases():
+    from casefinder.agent.prompts import ALWAYS_CHECK, checklist
+    items = dict(checklist([{"uid": 1, "groups": ["Cardiomegaly", "Aorta Abnormal"]},
+                            {"uid": 2, "groups": ["No Finding"]}, {"uid": 3, "groups": ["Cardiomegaly"]}]))
+    assert items["Cardiomegaly"] == [1, 3] and items["Aorta Abnormal"] == [1] and items["Pneumothorax"] == []
+    assert "No Finding" not in items and set(ALWAYS_CHECK) <= set(items)

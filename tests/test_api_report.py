@@ -33,6 +33,13 @@ class OneShotModel:
     def revise(self, image, cases, report, verdicts, config=None):
         return report
 
+    def look_again(self, image, cases, report, config=None):
+        from casefinder.agent.schemas import LookAgain
+        return LookAgain(items=[])
+
+    def amend(self, image, cases, report, missed, config=None):
+        return report
+
 
 def client_with(model):
     emb = np.eye(D, dtype=np.float32)

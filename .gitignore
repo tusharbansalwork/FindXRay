@@ -13,5 +13,6 @@ venv/
 artifacts/embeddings/*
 artifacts/onnx/*
 artifacts/library/
+results/02_report_eval/cache/
 !artifacts/**/.gitkeep
 tools/browser_bench/vendor/

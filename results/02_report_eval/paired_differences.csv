@@ -1,0 +1,5 @@
+comparison,meaning,diff_micro_f1_14,lo,hi
+agent_final - nearest_case,agent vs copying the nearest case,0.10668633235004915,0.010219324469246166,0.2042118674764893
+agent_final - image_only,agent vs Gemini without retrieval,0.12159148140153969,0.002594556948462491,0.2410478564637158
+agent_draft - image_only,effect of retrieval on the draft,0.11692535107169255,-0.0037438026707475474,0.23241707440198825
+agent_final - agent_draft,effect of look-again + verification,0.00466613032984714,-0.01909172764450911,0.041282528485281834

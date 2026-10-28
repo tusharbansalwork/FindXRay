@@ -30,6 +30,17 @@ class Verification(BaseModel):
     verdicts: list[Verdict]
 
 
+class CheckItem(BaseModel):
+    finding: str = Field(description="The checklist finding, exactly as named in the checklist.")
+    present: Literal["yes", "no", "uncertain"] = Field(description="Whether THIS image shows the finding.")
+    in_draft: bool = Field(description="True if the draft already states this finding correctly.")
+    evidence: str = Field(description="One short phrase: what/where in the image, or why it is absent.")
+
+
+class LookAgain(BaseModel):
+    items: list[CheckItem]
+
+
 class CheckedSentence(Sentence):
     supported: bool
     reason: str
@@ -43,5 +54,9 @@ class ReportResult(BaseModel):
     cases: list[dict]
     revisions: int
     first_pass_supported: float = Field(description="Share of sentences supported in the first draft.")
+    first_draft: list[Sentence] = Field(default_factory=list,
+                                        description="The draft before look-again, verification and revision.")
+    missed_findings: list[CheckItem] = Field(default_factory=list,
+                                             description="Findings the look-again step found missing from the draft.")
     prompt_versions: dict[str, str]
     model: str

@@ -14,12 +14,13 @@ from typing import Any, Protocol
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnableLambda
 
-from casefinder.agent.prompts import LOCAL_PROMPTS, format_cases, format_report
-from casefinder.agent.schemas import Report, Verdict, Verification
+from casefinder.agent.prompts import LOCAL_PROMPTS, format_cases, format_checklist, format_report
+from casefinder.agent.schemas import CheckItem, LookAgain, Report, Verdict, Verification
 
-# 2026-10-28: gemini-2.5-flash is closed to new API projects (404); gemini-3.8-flash, 3.7-flash and
-# gemini-flash-latest timed out even on "reply OK"; gemini-3.6-flash answered in ~3 s (scripts/diagnose_gemini.py).
-DEFAULT_MODEL = "gemini-3.6-flash"
+# Free-tier daily request limits per model (FindXRay project, 2026-10-28): gemini-3.6-flash and 3.8-flash
+# 20/day; gemini-3.5-flash-lite 500/day. 2.5-flash is closed to new projects. Flash-Lite is the default
+# because it is the only one with room for an evaluation and a public demo (see DECISIONS.md D11, D13).
+DEFAULT_MODEL = "gemini-3.5-flash-lite"
 
 
 @dataclass(frozen=True)
@@ -40,6 +41,10 @@ class ReportModel(Protocol):
                config: RunnableConfig | None = None) -> Verification: ...
     def revise(self, image: XRayImage, cases: list[dict], report: Report, verdicts: list[Verdict],
                config: RunnableConfig | None = None) -> Report: ...
+    def look_again(self, image: XRayImage, cases: list[dict], report: Report,
+                   config: RunnableConfig | None = None) -> LookAgain: ...
+    def amend(self, image: XRayImage, cases: list[dict], report: Report, missed: list[CheckItem],
+              config: RunnableConfig | None = None) -> Report: ...
 
 
 @dataclass
@@ -86,8 +91,15 @@ class GeminiReportModel:
             raise RuntimeError("Set GEMINI_API_KEY (or GOOGLE_API_KEY) to use the Gemini report model")
         # Latency controls. With defaults (dynamic thinking, full-resolution image) a single call to
         # gemini-3.8-flash exceeded a 90 s deadline on a 2048x2048 X-ray. All overridable from .env.
-        self.thinking_level = os.environ.get("GEMINI_THINKING_LEVEL", "low")            # minimal|low|medium|high
-        self.media_resolution = os.environ.get("GEMINI_MEDIA_RESOLUTION", "MEDIA_RESOLUTION_MEDIUM")
+        # Defaults raised after the first evaluation showed Flash-Lite missing subtle findings (D13).
+        self.thinking_level = os.environ.get("GEMINI_THINKING_LEVEL", "medium")         # minimal|low|medium|high
+        self.media_resolution = os.environ.get("GEMINI_MEDIA_RESOLUTION", "MEDIA_RESOLUTION_HIGH")
+        # Client-side pacing. Free-tier quotas are per minute; Google's client retries a 429 within seconds,
+        # which cannot clear a per-minute window and burns more quota. GEMINI_RPM=0 disables pacing.
+        from langchain_core.rate_limiters import InMemoryRateLimiter
+        self.rpm = float(os.environ.get("GEMINI_RPM", "5"))
+        self.rate_limiter = (InMemoryRateLimiter(requests_per_second=self.rpm / 60, check_every_n_seconds=0.1,
+                                                 max_bucket_size=1) if self.rpm > 0 else None)
         # Gemini 3.x Flash models use fixed sampling defaults and ignore temperature (with a warning), so it
         # is only sent when explicitly requested.
         extra = {} if temperature is None else {"temperature": temperature}
@@ -96,7 +108,8 @@ class GeminiReportModel:
                                           # LangChain's max_retries is the TOTAL number of attempts (1 = no retry).
                                           # google-genai backs off exponentially on 429/5xx, e.g. 503 "high demand".
                                           max_retries=int(os.environ.get("GEMINI_MAX_ATTEMPTS", "4")),
-                                          timeout=float(os.environ.get("GEMINI_TIMEOUT", "180")))
+                                          timeout=float(os.environ.get("GEMINI_TIMEOUT", "180")),
+                                          rate_limiter=self.rate_limiter)
         self.prompts = prompts or PromptSource()
         self.prompt_versions: dict[str, str] = {}
 
@@ -126,8 +139,24 @@ class GeminiReportModel:
         return result
 
     def draft(self, image, cases, config=None) -> Report:
-        text = f"Similar past cases:\n{format_cases(cases)}\n\nDraft the report for the attached X-ray."
+        if cases:
+            text = (f"Similar past cases:\n{format_cases(cases)}\n\nChecklist:\n{format_checklist(cases)}"
+                    "\n\nDraft the report for the attached X-ray.")
+        else:  # image-only baseline for the evaluation: same prompt and fixed checklist, no retrieval
+            text = ("No similar cases are provided for this X-ray; every sentence must cite \"image\".\n\n"
+                    f"Checklist:\n{format_checklist([])}\n\nDraft the report for the attached X-ray.")
         return self._call("findxray-draft", Report, text, image, config)
+
+    def look_again(self, image, cases, report, config=None) -> LookAgain:
+        text = (f"Draft sentences:\n{format_report(report.sentences)}\n\nChecklist:\n{format_checklist(cases)}"
+                "\n\nCheck every checklist item against the image.")
+        return self._call("findxray-look-again", LookAgain, text, image, config)
+
+    def amend(self, image, cases, report, missed: list[CheckItem], config=None) -> Report:
+        missed_text = "\n".join(f"- {m.finding} ({m.present}): {m.evidence}" for m in missed)
+        text = (f"Similar past cases:\n{format_cases(cases)}\n\nDraft sentences:\n{format_report(report.sentences)}"
+                f"\n\nMissed findings:\n{missed_text}\n\nReturn the amended report.")
+        return self._call("findxray-amend", Report, text, image, config)
 
     def verify(self, image, cases, report, config=None) -> Verification:
         text = (f"Similar past cases:\n{format_cases(cases)}\n\nDraft sentences:\n{format_report(report.sentences)}"
