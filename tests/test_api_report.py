@@ -111,3 +111,104 @@ def test_report_not_configured_without_key(monkeypatch):
     with c:
         r = c.post("/report", json=body(emb))
     assert r.status_code == 503
+
+
+# --- daily cap, quota errors, streaming -------------------------------------------------------
+
+import json
+from datetime import date
+
+from casefinder.api import DailyCap, ensure_library, is_quota_error
+
+
+class QuotaModel(OneShotModel):
+    def draft(self, image, cases, config=None):
+        raise RuntimeError("429 RESOURCE_EXHAUSTED: GenerateRequestsPerDayPerProjectPerModel-FreeTier")
+
+
+def test_daily_cap_blocks_after_limit(monkeypatch):
+    monkeypatch.setenv("CASEFINDER_DAILY_REPORTS", "2")
+    c, emb = client_with(OneShotModel())
+    with c:
+        codes = [c.post("/report", json=body(emb)).status_code for _ in range(3)]
+        health = c.get("/health").json()
+    assert codes == [200, 200, 429]
+    assert health["reports_left_today"] == 0
+
+
+def test_daily_cap_message_points_to_samples(monkeypatch):
+    monkeypatch.setenv("CASEFINDER_DAILY_REPORTS", "1")
+    c, emb = client_with(OneShotModel())
+    with c:
+        c.post("/report", json=body(emb))
+        r = c.post("/report/stream", json=body(emb))
+    assert r.status_code == 429 and "sample" in r.json()["detail"]
+
+
+def test_invalid_requests_do_not_use_the_cap(monkeypatch):
+    monkeypatch.setenv("CASEFINDER_DAILY_REPORTS", "1")
+    c, emb = client_with(OneShotModel())
+    with c:
+        assert c.post("/report", json=body(emb, data=b"not an image")).status_code == 422
+        assert c.post("/report", json=body(emb)).status_code == 200
+
+
+def test_daily_cap_resets_on_a_new_day():
+    today = [date(2026, 10, 28)]
+    cap = DailyCap(1, clock=lambda: today[0])
+    assert cap.take() and not cap.take()
+    today[0] = date(2026, 10, 29)
+    assert cap.remaining() == 1 and cap.take()
+
+
+def test_zero_means_no_cap():
+    cap = DailyCap(0)
+    assert all(cap.take() for _ in range(500)) and cap.remaining() is None
+
+
+def test_quota_error_is_429_with_friendly_message():
+    c, emb = client_with(QuotaModel())
+    with c:
+        r = c.post("/report", json=body(emb))
+    assert r.status_code == 429 and "quota" in r.json()["detail"] and "PerDay" not in r.json()["detail"]
+    assert is_quota_error(RuntimeError("429 RESOURCE_EXHAUSTED")) and not is_quota_error(ConnectionError("reset"))
+
+
+def read_stream(r):
+    return [json.loads(line) for line in r.text.splitlines() if line.strip()]
+
+
+def test_stream_reports_steps_then_result():
+    c, emb = client_with(OneShotModel())
+    with c:
+        r = c.post("/report/stream", json=body(emb, k=3))
+    assert r.status_code == 200 and r.headers["content-type"].startswith("application/x-ndjson")
+    events = read_stream(r)
+    assert events[0] == {"event": "started", "model": "one-shot"}
+    steps = [e["step"] for e in events if e["event"] == "step"]
+    assert steps == ["retrieve", "draft", "look_again", "check"]
+    result = events[-1]
+    assert result["event"] == "result" and result["result"]["report"][0]["text"] == "Heart size normal."
+    assert len(result["result"]["cases"]) == 3
+
+
+def test_stream_error_event_hides_details():
+    c, emb = client_with(OneShotModel(fail=True))
+    with c:
+        events = read_stream(c.post("/report/stream", json=body(emb)))
+    assert events[-1]["event"] == "error" and events[-1]["status"] == 502
+    assert "secret" not in json.dumps(events)
+
+
+def test_stream_quota_error_event():
+    c, emb = client_with(QuotaModel())
+    with c:
+        events = read_stream(c.post("/report/stream", json=body(emb)))
+    assert events[-1] == {"event": "error", "status": 429,
+                          "message": "The AI model's free daily quota is used up. Try one of the sample X-rays."}
+
+
+def test_missing_library_without_repo_is_a_clear_error(tmp_path, monkeypatch):
+    monkeypatch.delenv("CASEFINDER_LIBRARY_REPO", raising=False)
+    with pytest.raises(FileNotFoundError, match="CASEFINDER_LIBRARY_REPO"):
+        ensure_library(tmp_path / "library")

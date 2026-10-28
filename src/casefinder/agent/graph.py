@@ -151,10 +151,21 @@ def to_result(state: State, model: ReportModel) -> ReportResult:
     )
 
 
-def run_report(library: CaseLibrary, model: ReportModel, image: XRayImage, embedding, k: int = 5,
-               callbacks: list | None = None) -> ReportResult:
+def stream_report(library: CaseLibrary, model: ReportModel, image: XRayImage, embedding, k: int = 5,
+                  callbacks: list | None = None):
+    """Run the agent, yielding each finished step's name ("retrieve", "draft", ...) and finally the ReportResult."""
     graph = build_graph(library, model, image)
     config: RunnableConfig = {"callbacks": callbacks or [], "run_name": "findxray-report",
                               "recursion_limit": 20}
-    state = graph.invoke({"embedding": list(map(float, embedding)), "k": k}, config=config)
-    return to_result(state, model)
+    state: State = {"embedding": list(map(float, embedding)), "k": k}
+    for chunk in graph.stream(dict(state), config=config, stream_mode="updates"):
+        for node, update in chunk.items():
+            state.update(update or {})
+            yield node
+    yield to_result(state, model)
+
+
+def run_report(library: CaseLibrary, model: ReportModel, image: XRayImage, embedding, k: int = 5,
+               callbacks: list | None = None) -> ReportResult:
+    *_, result = stream_report(library, model, image, embedding, k, callbacks)
+    return result

@@ -11,7 +11,8 @@ Upload a chest X-ray and see the most similar past cases, what they were diagnos
 - [x] Case images for the results (unmodified copies on Hugging Face)
 - [x] LangGraph report agent + Langfuse tracing (draft, second look, verify, revise; median 16 s per report on gemini-3.5-flash-lite)
 - [x] Report-quality evaluation: 50 held-out studies scored against radiologists' reports (CheXbert)
-- [ ] Frontend + deployment
+- [x] Website: sample gallery, live upload (in-browser search + streamed report), results section
+- [ ] Deployed on Render (config ready: `render.yaml`)
 
 ## Results
 ### Finding similar cases
@@ -54,6 +55,9 @@ results/             metric CSVs from each notebook run
 data/splits.csv      fixed train/val/test split
 artifacts/           embeddings and ONNX models (not in git)
 tools/browser_bench/ in-browser encoder speed test
+frontend/            the website: site/ is published as-is (HTML, CSS, JS modules, data/);
+                     build.mjs copies ONNX Runtime Web + the font in; serve.py previews it locally
+render.yaml          Render Blueprint: API web service + static site with the required headers
 ```
 
 ## Run the tests
@@ -88,7 +92,29 @@ python scripts/eval_score.py --start 11 --end 60 --push-langfuse # CheXbert F1 v
 Compares four systems on the same held-out studies: copying the nearest case's report, Gemini without
 retrieval, the agent's first draft, and the agent's verified report. Results land in `results/02_report_eval/`.
 
+## Website
+```
+python scripts/build_site_data.py               # gallery + results data from results/ (no API calls)
+cd frontend && npm ci && node build.mjs && cd ..
+python frontend/serve.py                        # http://localhost:8080 (sends the COOP/COEP headers)
+uvicorn casefinder.api:app --app-dir src --env-file .env   # the API, in a second terminal
+```
+The page encodes uploads in the browser with the same preprocessing as the benchmark (Pillow's bicubic
+resize ported to JavaScript; verified bit-identical), searches via `/search`, and streams the agent's steps
+from `/report/stream`. Samples are pre-computed from the final evaluation and need no API.
+
+## Deploy (Render, free)
+1. `hf auth login` (write token), then `python scripts/upload_assets.py`: the encoder goes to the model repo
+   `tush-2ar/findxray-encoder`, the search library to `tush-2ar/findxray-case-library/library/`.
+2. Render dashboard -> New -> Blueprint -> this repo. Enter `GEMINI_API_KEY` and the Langfuse keys when asked.
+3. If Render gives the services different URLs than `findxray` / `findxray-api`, update `API_BASE` in
+   `frontend/site/js/config.js` and `CASEFINDER_ORIGINS` in `render.yaml`.
+4. Optional: keep the API awake by pinging `/health` every 10 minutes (e.g. cron-job.org).
+
+Live reports are capped at 60 a day (`CASEFINDER_DAILY_REPORTS`) so a crawler cannot use up the free Gemini quota.
+
 ## Data and model credits
 - Indiana University chest X-ray collection via Open-i (U.S. National Library of Medicine), CC BY-NC-ND 4.0. Library images re-shared unmodified at [tush-2ar/findxray-case-library](https://huggingface.co/datasets/tush-2ar/findxray-case-library).
 - RAD-DINO (Microsoft), MIT licence. BiomedCLIP (Microsoft). DINOv2 (Meta).
 - CheXbert labeller (Smit et al., 2020; Stanford AIMI weights, MIT) via `f1chexbert` for report evaluation.
+- ONNX Runtime Web (Microsoft, MIT). Archivo typeface (Omnibus-Type, SIL Open Font License).

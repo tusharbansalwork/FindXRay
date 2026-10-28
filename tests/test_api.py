@@ -23,7 +23,10 @@ def client():
 def test_health(client):
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok", "model": "test-model", "library_size": 30, "dim": D}
+    body = r.json()
+    assert {k: body[k] for k in ("status", "model", "library_size", "dim")} == \
+        {"status": "ok", "model": "test-model", "library_size": 30, "dim": D}
+    assert body["reports_left_today"] == 60
 
 
 def test_search_returns_self_first(client):
@@ -77,7 +80,7 @@ def test_nan_rejected(client):
 
 
 def test_cors_allows_configured_origin_only(client):
-    ok = client.options("/search", headers={"Origin": "http://localhost:8000", "Access-Control-Request-Method": "POST"})
-    assert ok.headers.get("access-control-allow-origin") == "http://localhost:8000"
+    ok = client.options("/search", headers={"Origin": "http://localhost:8080", "Access-Control-Request-Method": "POST"})
+    assert ok.headers.get("access-control-allow-origin") == "http://localhost:8080"
     bad = client.options("/search", headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"})
     assert "access-control-allow-origin" not in bad.headers

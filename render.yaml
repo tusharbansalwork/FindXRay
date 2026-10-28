@@ -1,0 +1,55 @@
+# Render Blueprint: the API (Python web service) and the web page (static site).
+# Render dashboard -> New -> Blueprint -> pick this repo. Secrets marked `sync: false` are asked for once.
+services:
+  - type: web
+    name: findxray-api
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -c deploy/constraints.txt -e ".[api]"
+    startCommand: uvicorn casefinder.api:app --app-dir src --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: CASEFINDER_LIBRARY_REPO
+        value: tush-2ar/findxray-case-library
+      - key: CASEFINDER_ORIGINS
+        value: https://findxray.onrender.com
+      - key: CASEFINDER_DAILY_REPORTS
+        value: "60"
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash-lite
+      - key: GEMINI_RPM
+        value: "10"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      - key: LANGFUSE_BASE_URL
+        value: https://cloud.langfuse.com
+
+  - type: web
+    name: findxray
+    runtime: static
+    buildCommand: cd frontend && npm ci && node build.mjs
+    staticPublishPath: frontend/site
+    headers:
+      # Cross-origin isolation: lets the in-browser encoder use several CPU threads (DECISIONS D7).
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      - path: /*
+        name: Cross-Origin-Embedder-Policy
+        value: require-corp
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /vendor/*
+        name: Cache-Control
+        value: public, max-age=604800

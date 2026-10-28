@@ -1,0 +1,1002 @@
+{
+ "model": "gemini-3.5-flash-lite",
+ "config": "v2",
+ "samples": [
+  {
+   "uid": 549,
+   "title": "Scarred, shrunken upper left lung",
+   "term": "Left upper lobe volume loss",
+   "image": "data/samples/549.jpg",
+   "indication": "XXXX",
+   "radiologist": {
+    "findings": "Stable appearance of the left upper lung lobe with scarring, volume loss, and pleural thickening. Cardiomediastinal silhouette is within normal limits normal appearance, similar to prior. Volume loss in the left lung, stable. Right lung is clear. There is no XXXX focal airspace disease, pleural effusion, or pneumothorax. Mild scarring at the right apex. No acute bony abnormality.",
+    "impression": "1. No acute cardiopulmonary process. 2. Stable appearance of the left upper lobe."
+   },
+   "report": [
+    {
+     "section": "findings",
+     "text": "There is volume loss and opacification in the left upper lobe with superior retraction of the left hilum and apical pleural thickening.",
+     "sources": [
+      "image",
+      "case:1160",
+      "case:1446"
+     ],
+     "reason": "The left upper lobe volume loss, opacification, superior hilar retraction, and apical pleural thickening are clearly visible in the image."
+    },
+    {
+     "section": "findings",
+     "text": "The right lung is clear without focal airspace disease, pleural effusion, or pneumothorax.",
+     "sources": [
+      "image",
+      "case:1160"
+     ],
+     "reason": "The right lung is clear without focal airspace disease, effusion, or pneumothorax as seen on the image."
+    },
+    {
+     "section": "findings",
+     "text": "The heart size is normal.",
+     "sources": [
+      "image",
+      "case:1160"
+     ],
+     "reason": "The heart size is within normal limits."
+    },
+    {
+     "section": "impression",
+     "text": "Left upper lobe collapse and parenchymal scarring with associated left apical pleural thickening.",
+     "sources": [
+      "image",
+      "case:1160",
+      "case:1446"
+     ],
+     "reason": "Left upper lobe collapse, scarring, and pleural thickening are well supported by the image."
+    }
+   ],
+   "removed": [],
+   "missed_findings": [],
+   "revisions": 0,
+   "seconds": 15.51,
+   "cases": [
+    {
+     "rank": 1,
+     "uid": 1160,
+     "similarity": 0.7344,
+     "groups": [
+      "Atelectasis",
+      "Scarring / Fibrosis"
+     ],
+     "findings": "The left hilum is retracted superiorly. In the collapsed left upper lobe are stranding and pneumatoceles. Additionally, pleural thickening is present in the left apex. No infiltrates are present in the left lower lobe or in the right lung. Heart size is normal. These findings are similar to the previous outside examination.",
+     "impression": "Stable left upper lobe collapse associated with parenchymal scarring and pleural thickening. Findings consistent with previous active pulmonary tuberculosis pneumonia.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1160.jpg"
+    },
+    {
+     "rank": 2,
+     "uid": 3080,
+     "similarity": 0.5602,
+     "groups": [
+      "Scarring / Fibrosis"
+     ],
+     "findings": "The cavity and the left upper lobe has decreased in size. Bilateral apical bullae and parenchymal scars are unchanged. No XXXX infiltrates in the lower lobes. Heart size remains normal.",
+     "impression": "Bullous disease and upper lobe scars. Decreasing right upper lobe cavity.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3080.jpg"
+    },
+    {
+     "rank": 3,
+     "uid": 1446,
+     "similarity": 0.554,
+     "groups": [
+      "Atelectasis",
+      "Scarring / Fibrosis"
+     ],
+     "findings": null,
+     "impression": "Further fibrosis and collapse of the left upper lobe with left apical pleural thickening. No evidence of recurrence. Heart size normal. No effusion.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1446.jpg"
+    },
+    {
+     "rank": 4,
+     "uid": 701,
+     "similarity": 0.5281,
+     "groups": [
+      "Atelectasis",
+      "Hyperinflation / COPD",
+      "Scarring / Fibrosis"
+     ],
+     "findings": "There are postsurgical and postradiation changes of the left lung with a spiculated, hyperdense scar in the left upper thorax. There is a loss of lung volume on the left due to postsurgical change. XXXX deviation towards the left. Right lung is hyperexpanded. The right lung is clear. Heart size and vascularity within normal limits.",
+     "impression": "Postsurgical and postradiation changes on the left with no acute abnormality.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/701.jpg"
+    },
+    {
+     "rank": 5,
+     "uid": 2969,
+     "similarity": 0.4256,
+     "groups": [
+      "Aorta Abnormal",
+      "Granuloma / Calcification",
+      "Hyperinflation / COPD",
+      "Scarring / Fibrosis"
+     ],
+     "findings": "Heart size and mediastinal contours are stable. Atherosclerotic calcifications of the aorta. Moderate severe hyperexpansion of the lungs and decreased peripheral vascular markings, consistent with emphysema. Stable biapical pleural-parenchymal scarring. Scattered granulomas. No abnormal airspace consolidation. No pneumothorax or pleural effusion.",
+     "impression": "1. Stable emphysematous changes. 2. Stable biapical pleural-parenchymal scarring.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2969.jpg"
+    }
+   ],
+   "agreement": {
+    "radiologist": [
+     "Lung Opacity",
+     "Pleural Other"
+    ],
+    "ai": [
+     "Lung Opacity",
+     "Atelectasis",
+     "Pleural Other"
+    ],
+    "f1": 0.8
+   }
+  },
+  {
+   "uid": 2046,
+   "title": "Fluid around the right lung",
+   "term": "Pleural effusion",
+   "image": "data/samples/2046.jpg",
+   "indication": "786.59, 54yof with chest pain;:attn: sternum,direct XXXX to sternum 3 days ago",
+   "radiologist": {
+    "findings": "There is a minimally displaced fracture of the right lateral 7th rib. There is a small right pleural effusion with associated atelectasis of the right lower lobe. There appears to be a healing fracture of the posterolateral right 8th rib. There is questionable cortical defect involving the sternum seen XXXX on lateral view. XXXX would be XXXX to evaluate this finding. As the small right-sided pleural effusion is visible on both PA and lateral views. There is a XXXX left-sided pleural effusion as well. The left lung appears grossly clear. Heart size and pulmonary XXXX appear normal. There is a mild scoliosis involving the thoracic spine.",
+    "impression": "1. Minimally displaced fracture involving the lateral right 7th rib, XXXX acute. There is and associated small right pleural effusion and right basilar atelectasis. 2. Questionable anterior XXXX cortical disruption seen XXXX on lateral view. XXXX would be needed to evaluate this. 3. XXXX left-sided pleural effusion"
+   },
+   "report": [
+    {
+     "section": "findings",
+     "text": "The heart size and mediastinal contours are normal.",
+     "sources": [
+      "image"
+     ],
+     "reason": "The heart size and mediastinal contours appear normal on the image."
+    },
+    {
+     "section": "findings",
+     "text": "There is opacification at the right base with blunting of the right costophrenic angle, representing pleural effusion and basilar atelectasis.",
+     "sources": [
+      "image",
+      "case:1079",
+      "case:2370",
+      "case:2801"
+     ],
+     "reason": "Right basal opacification and blunting of the right costophrenic angle are visible on the image."
+    },
+    {
+     "section": "findings",
+     "text": "The left lung is clear of focal consolidation, effusion, or pneumothorax.",
+     "sources": [
+      "image",
+      "case:2370"
+     ],
+     "reason": "The left lung is clear of focal consolidation, effusion, or pneumothorax on the image."
+    },
+    {
+     "section": "findings",
+     "text": "There is mild curvature of the thoracic spine.",
+     "sources": [
+      "image",
+      "case:1768"
+     ],
+     "reason": "Mild curvature of the thoracic spine is visible."
+    },
+    {
+     "section": "impression",
+     "text": "Right pleural effusion with associated right basilar atelectasis.",
+     "sources": [
+      "image",
+      "case:1079",
+      "case:2370",
+      "case:2801"
+     ],
+     "reason": "Right pleural effusion and basilar atelectasis are supported by the image."
+    },
+    {
+     "section": "impression",
+     "text": "No acute cardiopulmonary abnormality in the left lung.",
+     "sources": [
+      "image",
+      "case:2370"
+     ],
+     "reason": "The left lung shows no acute cardiopulmonary abnormality on the image."
+    }
+   ],
+   "removed": [],
+   "missed_findings": [],
+   "revisions": 0,
+   "seconds": 15.88,
+   "cases": [
+    {
+     "rank": 1,
+     "uid": 1079,
+     "similarity": 0.4253,
+     "groups": [
+      "Atelectasis",
+      "Low Lung Volume"
+     ],
+     "findings": "There are low lung volumes. The heart size and upper mediastinum have a normal appearance. There is no pulmonary vascular congestion. There is minimal right basilar atelectasis. There is no large effusion or pneumothorax. The osseous structures appear intact.",
+     "impression": "Low lung volume exam demonstrates small amount of right basilar atelectasis. There is no acute consolidation or pneumothorax.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1079.jpg"
+    },
+    {
+     "rank": 2,
+     "uid": 2360,
+     "similarity": 0.3993,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": "The lungs are clear. The cardiomediastinal silhouette is within normal limits. No pleural effusion is identified.",
+     "impression": "No acute abnormality.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2360.jpg"
+    },
+    {
+     "rank": 3,
+     "uid": 2370,
+     "similarity": 0.3812,
+     "groups": [
+      "Atelectasis",
+      "Lung Opacity",
+      "Pleural Effusion"
+     ],
+     "findings": "In the interval, consolidation and atelectasis have developed in the right lower lobe. Costophrenic XXXX blunted on the right. Left lung clear. Heart size normal.",
+     "impression": "Left lower lobe airspace disease consistent with pneumonia. Associated right pleural effusion.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2370.jpg"
+    },
+    {
+     "rank": 4,
+     "uid": 2801,
+     "similarity": 0.3761,
+     "groups": [
+      "Atelectasis",
+      "Low Lung Volume"
+     ],
+     "findings": null,
+     "impression": "Suboptimal inspiration with mild bibasilar hypoventilation and some subsegmental atelectasis within right middle lobe. otherwise clear lungs with no acute airspace disease seen. No effusions. Stable and unremarkable mediastinal contour. No XXXX acute abnormalities since the previous chest radiograph.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2801.jpg"
+    },
+    {
+     "rank": 5,
+     "uid": 1768,
+     "similarity": 0.3743,
+     "groups": [
+      "Scarring / Fibrosis",
+      "Spine Degenerative / Curvature"
+     ],
+     "findings": "There is minimal scarring in the lung apices. The lungs are otherwise clear. Heart size is normal. No pneumothorax. There is dextrocurvature within the spine.",
+     "impression": "No acute cardiopulmonary abnormality. .",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1768.jpg"
+    }
+   ],
+   "agreement": {
+    "radiologist": [
+     "Atelectasis",
+     "Pleural Effusion",
+     "Fracture"
+    ],
+    "ai": [
+     "Lung Opacity",
+     "Atelectasis",
+     "Pleural Effusion"
+    ],
+    "f1": 0.667
+   }
+  },
+  {
+   "uid": 3752,
+   "title": "Mildly enlarged heart",
+   "term": "Cardiomegaly",
+   "image": "data/samples/3752.jpg",
+   "indication": "XXXX, XXXX, EtOH",
+   "radiologist": {
+    "findings": null,
+    "impression": "1. Widened upper mediastinal silhouette. May represent vascular shadows exaggerated by supine and very lordotic imaging technique. However, the setting of XXXX, upper mediastinal hematoma not excluded. Depending on clinical suspicion and mechanism further investigation may be warranted. 2. Mild cardiomegaly appears stable. No edema. No layering pleural effusions, focal consolidation or pneumothorax."
+   },
+   "report": [
+    {
+     "section": "findings",
+     "text": "The heart is mildly enlarged in size.",
+     "sources": [
+      "image",
+      "case:2141"
+     ],
+     "reason": "The heart size is mildly enlarged on the image and supported by case:2141."
+    },
+    {
+     "section": "findings",
+     "text": "There is tortuosity of the thoracic aorta.",
+     "sources": [
+      "image",
+      "case:2141"
+     ],
+     "reason": "Thoracic aortic tortuosity is visible on the image and supported by case:2141."
+    },
+    {
+     "section": "findings",
+     "text": "No focal airspace consolidation, pleural effusion, or pneumothorax is seen.",
+     "sources": [
+      "image",
+      "case:2141",
+      "case:780"
+     ],
+     "reason": "No focal airspace consolidation, pleural effusion, or pneumothorax is visible on the image."
+    },
+    {
+     "section": "findings",
+     "text": "Cardiac monitoring leads are present.",
+     "sources": [
+      "image"
+     ],
+     "reason": "Cardiac monitoring leads are visible on the image."
+    },
+    {
+     "section": "findings",
+     "text": "The visualized osseous structures are intact.",
+     "sources": [
+      "image",
+      "case:1687"
+     ],
+     "reason": "The visualized osseous structures appear intact on the image."
+    },
+    {
+     "section": "impression",
+     "text": "Cardiomegaly and tortuous thoracic aorta.",
+     "sources": [
+      "image",
+      "case:2141"
+     ],
+     "reason": "Cardiomegaly and tortuous thoracic aorta are visible on the image and supported by case:2141."
+    },
+    {
+     "section": "impression",
+     "text": "No acute focal cardiopulmonary abnormalities.",
+     "sources": [
+      "image",
+      "case:1687",
+      "case:780"
+     ],
+     "reason": "There are no acute focal cardiopulmonary abnormalities, supported by the image."
+    }
+   ],
+   "removed": [],
+   "missed_findings": [],
+   "revisions": 0,
+   "seconds": 15.33,
+   "cases": [
+    {
+     "rank": 1,
+     "uid": 2141,
+     "similarity": 0.469,
+     "groups": [
+      "Aorta Abnormal",
+      "Cardiomegaly"
+     ],
+     "findings": "The heart size is mildly enlarged. There is tortuosity of the thoracic aorta. No focal airspace consolidation, pleural effusions or pneumothorax. No acute bony abnormalities.",
+     "impression": "Cardiomegaly without acute pulmonary findings.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2141.jpg"
+    },
+    {
+     "rank": 2,
+     "uid": 1687,
+     "similarity": 0.4573,
+     "groups": [
+      "Devices / Hardware"
+     ],
+     "findings": "Feeding tube noted with tip XXXX distal to the gastroesophageal junction. No focal areas of consolidation. Heart size within normal limits. No pleural effusions. Osseous structures intact.",
+     "impression": "1. No acute cardiopulmonary abnormality. 2. Feeding tube tip XXXX distal to the gastroesophageal junction.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1687.jpg"
+    },
+    {
+     "rank": 3,
+     "uid": 947,
+     "similarity": 0.4386,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": "The cardiomediastinal silhouette is normal in size and contour. No focal consolidation, pneumothorax or large pleural effusion. Limited lateral view, given overlapping silhouettes. Negative for acute displaced rib fracture.",
+     "impression": "Negative for acute abnormality.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/947.jpg"
+    },
+    {
+     "rank": 4,
+     "uid": 780,
+     "similarity": 0.4318,
+     "groups": [
+      "Hyperinflation / COPD"
+     ],
+     "findings": "Heart size is upper limits of normal. Mediastinal contours and pulmonary vascularity are within normal limits. There is no focal infiltrate or suspicious pulmonary opacity. No pneumothorax or pleural effusion. There is a lucency along the peripheral right lung base, XXXX secondary to a skin fold. No acute bony findings.",
+     "impression": "Clear lungs. No acute cardiopulmonary findings.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/780.jpg"
+    },
+    {
+     "rank": 5,
+     "uid": 3525,
+     "similarity": 0.4303,
+     "groups": [
+      "Devices / Hardware",
+      "Granuloma / Calcification"
+     ],
+     "findings": "Heart size normal. No pneumothorax, pleural effusion, or focal airspace disease. The visualized bony structures appear intact. There is a XXXX radiodensity overlying the right shoulder which is XXXX external to the patient however clinical correlation recommended. Scattered calcified granulomas.",
+     "impression": "No acute cardiopulmonary abnormality. No fracture visualized.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3525.jpg"
+    }
+   ],
+   "agreement": {
+    "radiologist": [
+     "Enlarged Cardiomediastinum",
+     "Cardiomegaly"
+    ],
+    "ai": [
+     "Cardiomegaly"
+    ],
+    "f1": 0.667
+   }
+  },
+  {
+   "uid": 3951,
+   "title": "Shadow at the top of the right lung",
+   "term": "Lung mass / opacity",
+   "image": "data/samples/3951.jpg",
+   "indication": "XXXX-year-old male. XXXX.",
+   "radiologist": {
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. Masslike opacification of right apex. No pneumothorax or large pleural effusion. XXXX are grossly normal.",
+    "impression": "Worsening masslike opacification of right apex, suggesting worsening malignancy or malignancy with postobstructive pneumonia."
+   },
+   "report": [
+    {
+     "section": "findings",
+     "text": "The cardiomediastinal contours are within normal limits with a slightly tortuous aorta.",
+     "sources": [
+      "image",
+      "case:1351"
+     ],
+     "reason": "The cardiomediastinal contours are normal and the aorta is slightly tortuous, as visible on the image."
+    },
+    {
+     "section": "findings",
+     "text": "There is a prominent opacity and scarring in the right upper lobe.",
+     "sources": [
+      "image",
+      "case:2818"
+     ],
+     "reason": "A prominent opacity and scarring in the right upper lobe are clearly visible on the image."
+    },
+    {
+     "section": "findings",
+     "text": "No focal airspace consolidation, pleural effusion, or pneumothorax is seen.",
+     "sources": [
+      "image",
+      "case:1110"
+     ],
+     "reason": "There is no focal airspace consolidation, pleural effusion, or pneumothorax visible elsewhere."
+    },
+    {
+     "section": "impression",
+     "text": "Right upper lobe opacity, likely representing prior granulomatous or tuberculous infection.",
+     "sources": [
+      "image",
+      "case:2818"
+     ],
+     "reason": "The right upper lobe opacity is visible and appropriately described as likely prior granulomatous or tuberculous infection."
+    },
+    {
+     "section": "impression",
+     "text": "No acute cardiopulmonary abnormality otherwise.",
+     "sources": [
+      "image",
+      "case:1110"
+     ],
+     "reason": "There is no other acute cardiopulmonary abnormality apart from the chronic right upper lobe findings."
+    }
+   ],
+   "removed": [],
+   "missed_findings": [],
+   "revisions": 0,
+   "seconds": 15.52,
+   "cases": [
+    {
+     "rank": 1,
+     "uid": 1110,
+     "similarity": 0.5134,
+     "groups": [
+      "Granuloma / Calcification"
+     ],
+     "findings": "Cardiomediastinal contours within normal limits. Pulmonary vascularity is normal. There are scattered calcified testes bilaterally, consistent with prior granulomatous infection, stable. No XXXX focal airspace consolidation. No pleural effusion, no pneumothorax. Bony structures unremarkable.",
+     "impression": "No acute cardiopulmonary abnormality. Prior granulomatous infection.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1110.jpg"
+    },
+    {
+     "rank": 2,
+     "uid": 3448,
+     "similarity": 0.4913,
+     "groups": [
+      "Granuloma / Calcification",
+      "Hyperinflation / COPD",
+      "Lung Opacity"
+     ],
+     "findings": "The lungs are hyperexpanded. The heart is normal in size. The pulmonary vascularity is within normal limits in appearance. No focal airspace opacities, pneumothorax or pleural effusion. A calcific density in the left midlung zone XXXX represents old granulomatous disease. No acute bony abnormalities.",
+     "impression": "Hyperexpanded lungs with no focal airspace disease.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3448.jpg"
+    },
+    {
+     "rank": 3,
+     "uid": 1351,
+     "similarity": 0.466,
+     "groups": [
+      "Aorta Abnormal"
+     ],
+     "findings": null,
+     "impression": "Heart size is normal. Stable dilated slightly tortuous aorta. Lungs are clear. No edema or effusions. No nodules, masses, or adenopathy.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1351.jpg"
+    },
+    {
+     "rank": 4,
+     "uid": 2818,
+     "similarity": 0.4565,
+     "groups": [
+      "Hyperinflation / COPD",
+      "Lung Opacity"
+     ],
+     "findings": "There is stable cavity in the right apex, XXXX related to prior tuberculosis infection. There is increased opacity in the left upper lobe, peripherally. There is pulmonary hyperexpansion. There is no large effusion or pneumothorax.",
+     "impression": "Right upper lobe cavity, consistent with prior tuberculous infection. There is increased right upper lobe opacities XXXX compared to the prior study. This could represent reactivation of tuberculosis or other infection.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2818.jpg"
+    },
+    {
+     "rank": 5,
+     "uid": 2002,
+     "similarity": 0.4563,
+     "groups": [
+      "Devices / Hardware"
+     ],
+     "findings": "Within the posterior lateral 8th rib there is a deformity along the cortex with associated oblique lucency. In addition within the posterior lateral 9th rib there appears to be a obliquely oriented lucency with cortical disruption. Findings are concerning for possible left rib fractures. Otherwise the cardiomediastinal silhouette is within normal limits. The lungs are clear bilaterally. Multiple small punctate radiopaque foreign bodies are seen within the subcutaneous tissues and are present on previous CT scan from XXXX.",
+     "impression": "Possible lower posterior lateral left rib fractures as described above. If further concern for rib fractures dedicated rib films would better evaluate. Otherwise no acute cardiopulmonary disease.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2002.jpg"
+    }
+   ],
+   "agreement": {
+    "radiologist": [
+     "Lung Lesion",
+     "Pneumonia"
+    ],
+    "ai": [
+     "Lung Opacity",
+     "Pneumonia"
+    ],
+    "f1": 0.5
+   }
+  },
+  {
+   "uid": 3881,
+   "title": "Implanted chest port",
+   "term": "Support device",
+   "image": "data/samples/3881.jpg",
+   "indication": "Cancer of the appendix.",
+   "radiologist": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. Right hemidiaphragm remains elevated. No pleural effusion is seen. No pneumothorax is identified. No discrete nodules or adenopathy are noted. Degenerative changes are present in the spine. Right XXXX-a-XXXX has been inserted since the previous study. The tip projects over the lower superior XXXX XXXX.",
+    "impression": "1. No evidence of active disease."
+   },
+   "report": [
+    {
+     "section": "findings",
+     "text": "A right chest port-a-cath is in place with the catheter tip projecting in the central venous structures.",
+     "sources": [
+      "image",
+      "case:3188"
+     ],
+     "reason": "The right chest port-a-cath is clearly visible in the image and supported by case:3188."
+    },
+    {
+     "section": "findings",
+     "text": "The cardiac silhouette is at the upper limits of normal to borderline enlarged.",
+     "sources": [
+      "image",
+      "case:3188"
+     ],
+     "reason": "The cardiac silhouette size is borderline enlarged and supported by the image and case:3188."
+    },
+    {
+     "section": "findings",
+     "text": "The lungs demonstrate low lung volumes with bibasilar atelectasis and airspace opacities.",
+     "sources": [
+      "image",
+      "case:631",
+      "case:715"
+     ],
+     "reason": "Low lung volumes and bibasilar atelectasis/opacities are visible in the image and similar cases."
+    },
+    {
+     "section": "findings",
+     "text": "There is no pneumothorax or large pleural effusion.",
+     "sources": [
+      "image"
+     ],
+     "reason": "There is no pneumothorax or large pleural effusion visible in the image."
+    },
+    {
+     "section": "impression",
+     "text": "Borderline cardiomegaly and low lung volumes with bibasilar atelectasis.",
+     "sources": [
+      "image",
+      "case:631",
+      "case:3188"
+     ],
+     "reason": "Borderline cardiomegaly and low lung volumes with bibasilar atelectasis are supported by the image."
+    },
+    {
+     "section": "impression",
+     "text": "Right-sided vascular access port is intact.",
+     "sources": [
+      "image",
+      "case:3188"
+     ],
+     "reason": "The right-sided vascular access port is intact and visible in the image and case:3188."
+    }
+   ],
+   "removed": [],
+   "missed_findings": [],
+   "revisions": 0,
+   "seconds": 15.58,
+   "cases": [
+    {
+     "rank": 1,
+     "uid": 715,
+     "similarity": 0.3321,
+     "groups": [
+      "Atelectasis",
+      "Lung Opacity"
+     ],
+     "findings": "There is chronic asymmetric elevation of the right hemidiaphragm. Compared with the prior study, there is mildly increased streaky airspace disease in the right lung base. Hilar prominence appears stable. There is no pneumothorax or large pleural effusion. Heart size is stable and grossly normal. There no acute bony findings.",
+     "impression": "Chronic asymmetric elevation of the right hemidiaphragm with mildly increased right basilar airspace disease, atelectasis versus infiltrate. .",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/715.jpg"
+    },
+    {
+     "rank": 2,
+     "uid": 3714,
+     "similarity": 0.3192,
+     "groups": [
+      "Low Lung Volume"
+     ],
+     "findings": "Cardio mediastinal silhouette, pulmonary vascular pattern are within normal limits. Mildly low lung volumes. No focal infiltrate, pleural effusion or pulmonary edema. No pneumothorax.",
+     "impression": "No acute cardiopulmonary disease.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3714.jpg"
+    },
+    {
+     "rank": 3,
+     "uid": 631,
+     "similarity": 0.3027,
+     "groups": [
+      "Atelectasis",
+      "Devices / Hardware",
+      "Low Lung Volume",
+      "Lung Opacity"
+     ],
+     "findings": "The heart is normal in size. The mediastinum is within normal limits. Dual-lumen right IJ catheter is identified without pneumothorax. The lungs are moderately hypoinflated with bibasilar XXXX opacities XXXX adjacent atelectasis. There is ill-defined density overlying the anterior left 5th rib, possibly healing deformity versus superimposition of structures.",
+     "impression": "Moderate hypoinflation with associated bibasilar atelectasis.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/631.jpg"
+    },
+    {
+     "rank": 4,
+     "uid": 3188,
+     "similarity": 0.2814,
+     "groups": [
+      "Cardiomegaly",
+      "Devices / Hardware"
+     ],
+     "findings": null,
+     "impression": "The cardiac silhouette appears be at upper limits of normal to borderline enlarged. The mediastinum and parahilar structures are also slightly prominent but unchanged. Portacatheter is noted with its tip in superior XXXX XXXX. This appears unchanged. Slightly XXXX inspiratory effort is noted on the frontal film. This is unchanged. Osseous structures appear be grossly unremarkable. No pneumothorax or obvious pulmonary lesions seen.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3188.jpg"
+    },
+    {
+     "rank": 5,
+     "uid": 1761,
+     "similarity": 0.2737,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": null,
+     "impression": null,
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1761.jpg"
+    }
+   ],
+   "agreement": {
+    "radiologist": [
+     "Support Devices"
+    ],
+    "ai": [
+     "Cardiomegaly",
+     "Atelectasis",
+     "Support Devices"
+    ],
+    "f1": 0.5
+   }
+  },
+  {
+   "uid": 3392,
+   "title": "Healthy chest",
+   "term": "No finding",
+   "image": "data/samples/3392.jpg",
+   "indication": "Unavailable",
+   "radiologist": {
+    "findings": "Mediastinal contours are normal. Lungs are clear. There is no pneumothorax or large pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormality."
+   },
+   "report": [
+    {
+     "section": "findings",
+     "text": "The heart size and mediastinal contours are within normal limits.",
+     "sources": [
+      "image"
+     ],
+     "reason": "The heart size and mediastinal contours appear normal on the image."
+    },
+    {
+     "section": "findings",
+     "text": "The lungs are clear without focal consolidation, pleural effusion, or pneumothorax.",
+     "sources": [
+      "image"
+     ],
+     "reason": "The lungs are clear without focal consolidation, effusion, or pneumothorax on the image."
+    },
+    {
+     "section": "findings",
+     "text": "The osseous structures are intact.",
+     "sources": [
+      "image"
+     ],
+     "reason": "The osseous structures appear intact on the image."
+    },
+    {
+     "section": "impression",
+     "text": "No acute cardiopulmonary abnormality.",
+     "sources": [
+      "image"
+     ],
+     "reason": "There is no acute cardiopulmonary abnormality seen on the image."
+    }
+   ],
+   "removed": [],
+   "missed_findings": [],
+   "revisions": 0,
+   "seconds": 14.92,
+   "cases": [
+    {
+     "rank": 1,
+     "uid": 217,
+     "similarity": 0.589,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": null,
+     "impression": "Normal heart size and normal mediastinal contours. Normal pulmonary vasculature. No XXXX of pleural effusions. No infiltrates. Normal X-XXXX of chest.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/217.jpg"
+    },
+    {
+     "rank": 2,
+     "uid": 2672,
+     "similarity": 0.5386,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": "The heart and mediastinum are unremarkable. The lungs are clear without infiltrate. There is no effusion or pneumothorax.",
+     "impression": "1. No acute cardiopulmonary disease.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2672.jpg"
+    },
+    {
+     "rank": 3,
+     "uid": 3661,
+     "similarity": 0.523,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": "There are no focal areas of consolidation. No pleural effusions. No pneumothorax. Heart size within normal limits. Osseous structures intact.",
+     "impression": "No acute cardiopulmonary abnormality.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3661.jpg"
+    },
+    {
+     "rank": 4,
+     "uid": 2290,
+     "similarity": 0.518,
+     "groups": [
+      "No Finding"
+     ],
+     "findings": "There are no focal areas of consolidation. No suspicious pulmonary opacities. Heart size within normal limits. No pleural effusions. No evidence of pneumothorax. Osseous structures are intact.",
+     "impression": "No acute cardiopulmonary abnormality.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2290.jpg"
+    },
+    {
+     "rank": 5,
+     "uid": 3429,
+     "similarity": 0.5133,
+     "groups": [
+      "Devices / Hardware",
+      "Low Lung Volume"
+     ],
+     "findings": "Low lung volumes. Heart size normal. No pneumothorax, pleural effusion, or focal airspace disease. Bony structures appear intact. Left humeral head bone anchors.",
+     "impression": "No acute cardiopulmonary abnormality.",
+     "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3429.jpg"
+    }
+   ],
+   "agreement": {
+    "radiologist": [
+     "No Finding"
+    ],
+    "ai": [
+     "No Finding"
+    ],
+    "f1": 1.0
+   }
+  }
+ ],
+ "struggle": {
+  "uid": 465,
+  "title": "Small air leak at the top of the right lung",
+  "term": "Pneumothorax (missed)",
+  "image": "data/samples/465.jpg",
+  "indication": "XXXX-year-old status post thoracentesis",
+  "radiologist": {
+   "findings": "Normal cardiomediastinal contours. Right lower lung patchy opacities. Small right pneumothorax. Small right pleural effusion.",
+   "impression": "1. Small right apical pneumothorax. 2. Right middle and lower lobe patchy opacities, XXXX residual atelectasis. 3. Near-complete resolution of right-sided pleural effusion with XXXX residual. ."
+  },
+  "report": [
+   {
+    "section": "findings",
+    "text": "The heart size and pulmonary vascularity are within normal limits.",
+    "sources": [
+     "image",
+     "case:2165"
+    ],
+    "reason": "The heart size and pulmonary vascularity appear within normal limits on the image."
+   },
+   {
+    "section": "findings",
+    "text": "Low lung volumes are present.",
+    "sources": [
+     "image",
+     "case:2165"
+    ],
+    "reason": "Elevated diaphragms on the image reflect low lung volumes."
+   },
+   {
+    "section": "findings",
+    "text": "There is a right mid to lower lung opacity which may represent atelectasis or infection.",
+    "sources": [
+     "image",
+     "case:2165"
+    ],
+    "reason": "A right mid to lower lung opacity is clearly visible on the image."
+   },
+   {
+    "section": "findings",
+    "text": "No pneumothorax or pleural effusion is seen.",
+    "sources": [
+     "image",
+     "case:2165"
+    ],
+    "reason": "There is no evidence of pneumothorax or pleural effusion on the image."
+   },
+   {
+    "section": "findings",
+    "text": "There are degenerative changes of the thoracic spine.",
+    "sources": [
+     "image",
+     "case:3019"
+    ],
+    "reason": "Degenerative changes of the thoracic spine are visible."
+   },
+   {
+    "section": "impression",
+    "text": "1. Low lung volumes.",
+    "sources": [
+     "image",
+     "case:2165"
+    ],
+    "reason": "Low lung volumes are correctly noted in the impression."
+   },
+   {
+    "section": "impression",
+    "text": "2. Right mid to lower lung opacity, likely atelectasis or possible pneumonia.",
+    "sources": [
+     "image",
+     "case:2165"
+    ],
+    "reason": "The right mid to lower lung opacity is correctly noted in the impression."
+   }
+  ],
+  "removed": [],
+  "missed_findings": [],
+  "revisions": 0,
+  "seconds": 15.62,
+  "cases": [
+   {
+    "rank": 1,
+    "uid": 2165,
+    "similarity": 0.4111,
+    "groups": [
+     "Atelectasis",
+     "Low Lung Volume",
+     "Lung Opacity"
+    ],
+    "findings": "Low lung volumes are present. The heart size and pulmonary vascularity appear within normal limits. There has been interval development of bibasilar opacities. The appearance of the right base opacity XXXX atelectasis. The left base opacities could represent early pneumonia or areas of atelectasis. No pneumothorax or pleural effusion is seen.",
+    "impression": "1. Low lung volumes. 2. XXXX XXXX opacities. Right base appears to represent atelectasis. Left base could be atelectasis or pneumonia.",
+    "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2165.jpg"
+   },
+   {
+    "rank": 2,
+    "uid": 3901,
+    "similarity": 0.3972,
+    "groups": [
+     "Atelectasis",
+     "Low Lung Volume",
+     "Lung Opacity",
+     "Pleural Effusion"
+    ],
+    "findings": "The heart is normal in size. The mediastinum is stable. Postsurgical changes of esophagectomy and gastric pull-through are stable. Bibasilar air space opacities have significantly improved. The lungs remain hypoinflated with blunted costophrenic XXXX. There is no pneumothorax.",
+    "impression": "Stable postsurgical changes of esophagectomy with improved bibasilar airspace opacities/atelectasis.",
+    "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3901.jpg"
+   },
+   {
+    "rank": 3,
+    "uid": 2193,
+    "similarity": 0.3818,
+    "groups": [
+     "Lung Opacity",
+     "Pleural Effusion",
+     "Scarring / Fibrosis"
+    ],
+    "findings": "Again noted and is blunting of the right pleural space, XXXX a XXXX effusion or scarring. Opacity in the right lung base also appears unchanged, XXXX scarring. Heart size appears normal, improved from prior study. There is no vascular congestion or edema. There's no pneumothorax.",
+    "impression": "1. Stable right basilar scarring and right pleural thickening",
+    "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/2193.jpg"
+   },
+   {
+    "rank": 4,
+    "uid": 3019,
+    "similarity": 0.3613,
+    "groups": [
+     "Aorta Abnormal",
+     "Spine Degenerative / Curvature"
+    ],
+    "findings": "The heart is normal in size. The mediastinum is stable with aortic tortuosity. Lungs are clear with no pleural effusion or pneumothorax. No displaced rib fractures are noted. There are multilevel degenerative changes of the thoracic spine.",
+    "impression": "No acute disease.",
+    "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/3019.jpg"
+   },
+   {
+    "rank": 5,
+    "uid": 1525,
+    "similarity": 0.3535,
+    "groups": [
+     "Atelectasis",
+     "Lung Opacity",
+     "Pneumothorax"
+    ],
+    "findings": "4 images. There is a large hydropneumothorax within the left chest. There is essentially complete collapse of the left lung. Within the right lung, there are increased interstitial opacities within the medial right lung base and right upper lobe, with patchy airspace opacity within the right lung apex. At the right lung apex, there is a more focal ovoid lucency which measures approximately 1.3 cm. This could indicate cavitation. Left-sided cardiomediastinal contours are obscured by collapse of the left lung. No convincing acute bony findings.",
+    "impression": "1. Large left hydropneumothorax, with complete collapse of the left lung. 2. Airspace and interstitial opacity within the right upper and lower lobes. Possible apical cavitation. Tuberculosis should be excluded clinically.",
+    "image_url": "https://huggingface.co/datasets/tush-2ar/findxray-case-library/resolve/main/images/1525.jpg"
+   }
+  ],
+  "agreement": {
+   "radiologist": [
+    "Lung Opacity",
+    "Atelectasis",
+    "Pneumothorax",
+    "Pleural Effusion"
+   ],
+   "ai": [
+    "Lung Opacity",
+    "Pneumonia",
+    "Atelectasis"
+   ],
+   "f1": 0.571
+  },
+  "what_happened": "The radiologist reported a small pneumothorax (air outside the lung) at the right apex. FindXRay correctly found the opacity in the right lower lung, but wrote \"no pneumothorax\", and its own checking steps approved that sentence.",
+  "why": [
+   "The finding is a thin line at the very top of the lung: a few pixels once the whole X-ray is reduced to the size the AI reads.",
+   "Similar-case search compares whole images, which captures large patterns (heart size, lung volume) well but small local findings poorly (measured in the encoder benchmark).",
+   "The checker is the same model family as the writer, so it tends to agree with the draft: it approved 98.6% of sentences across the evaluation."
+  ],
+  "fix": [
+   "Zoom-in second look: crop the lung tops and corners at full resolution and ask targeted questions (pneumothorax, small effusions) before the report is finalised.",
+   "Add a dedicated pneumothorax detector as a tool the agent must consult, instead of relying on the language model's eyes alone.",
+   "Use a different, stronger model as the checker, so it does not share the writer's blind spots."
+  ]
+ }
+}

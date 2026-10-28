@@ -1,0 +1,9 @@
+{
+  "name": "findxray-frontend",
+  "private": true,
+  "description": "Static site for FindXRay. `npm install && node build.mjs` copies ONNX Runtime Web and the Archivo font into site/.",
+  "dependencies": {
+    "@fontsource-variable/archivo": "5.3.0",
+    "onnxruntime-web": "1.30.0"
+  }
+}

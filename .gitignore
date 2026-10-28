@@ -16,3 +16,7 @@ artifacts/library/
 results/02_report_eval/cache/
 !artifacts/**/.gitkeep
 tools/browser_bench/vendor/
+frontend/node_modules/
+frontend/site/vendor/
+frontend/site/fonts/
+frontend/site/model.onnx
