@@ -212,20 +212,27 @@ function buildHero(sample) {
     const img = el("img", { src: c.image_url, crossorigin: "anonymous", alt: `Case ${c.uid}: ${caseTitle(c.groups)}` });
     const li = el("li", { title: `Case ${c.uid}: ${caseTitle(c.groups)}` }, img, el("span", { class: "rank-ov", text: String(c.rank) }));
     ol.append(li);
-    const loaded = img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = r; });
+    const loaded = img.complete ? Promise.resolve()
+      : Promise.race([new Promise((r) => { img.onload = img.onerror = r; }), new Promise((r) => setTimeout(r, 5000))]);
     return { li, loaded };
   });
-  // The scan starts as soon as the query X-ray is on screen (it is local and small); each match then
-  // appears in turn once the sweep has passed and its own image has arrived, so slow images never hold up the scan.
+  // The scan starts as soon as the query X-ray is on screen (it is local and small). The matches then
+  // appear strictly top to bottom, 150 ms apart, after the sweep; a match that is still downloading
+  // holds back the ones below it, so the order never jumps (each waits at most 5 s for its image).
   let started = false;
-  const start = () => {
+  const start = async () => {
     if (started) return;
     started = true;
     fig.classList.add("run");
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    items.forEach(({ li, loaded }, i) => {
-      setTimeout(() => loaded.then(() => li.classList.add("in")), reduced ? 0 : 1250 + i * 150);
-    });
+    const sleep = (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms)));
+    let next = performance.now() + (reduced ? 0 : 1250);
+    for (const { li, loaded } of items) {
+      await loaded;
+      await sleep(next - performance.now());
+      li.classList.add("in");
+      next = performance.now() + (reduced ? 0 : 150);
+    }
   };
   if (q.complete && q.naturalWidth) start();
   else { q.addEventListener("load", start, { once: true }); q.addEventListener("error", start, { once: true }); }
@@ -448,13 +455,12 @@ function wireUpload() {
 async function main() {
   document.querySelectorAll("[data-repo]").forEach((a) => { a.href = REPO_URL; });
   wireUpload();
-  const [samples, metrics] = await Promise.all([
-    fetch("data/samples.json").then((r) => r.json()),
-    fetch("data/metrics.json").then((r) => r.json()),
-  ]);
+  const metricsP = fetch("data/metrics.json").then((r) => r.json());
+  const samples = await fetch("data/samples.json").then((r) => r.json());
   state.samples = samples;
   const hero = samples.samples.find((s) => s.uid === HERO_UID) || samples.samples[0];
-  buildHero(hero);
+  buildHero(hero);   // first, so the five match images start downloading as early as possible
+  const metrics = await metricsP;
   buildPicker(samples.samples);
   buildStruggle(samples.struggle);
   renderResults($("#results-body"), metrics);
