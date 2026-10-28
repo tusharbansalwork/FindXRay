@@ -205,20 +205,31 @@ function buildPicker(samples) {
 function buildHero(sample) {
   const fig = $(".hero-figure");
   const q = $("#hero-query");
-  q.src = sample.image;
+  if (!q.getAttribute("src")) q.src = sample.image;   // normally set in the HTML so it loads before any script runs
   $("#hero-term").textContent = sample.term;
   const ol = $("#hero-matches");
-  let pending = 1 + sample.cases.length;
-  const ready = () => { if (--pending === 0) fig.classList.add("run"); };
-  q.addEventListener("load", ready, { once: true });
-  q.addEventListener("error", ready, { once: true });
-  for (const c of sample.cases) {
+  const items = sample.cases.map((c) => {
     const img = el("img", { src: c.image_url, crossorigin: "anonymous", alt: `Case ${c.uid}: ${caseTitle(c.groups)}` });
-    img.addEventListener("load", ready, { once: true });
-    img.addEventListener("error", ready, { once: true });
-    ol.append(el("li", { title: `Case ${c.uid}: ${caseTitle(c.groups)}` }, img, el("span", { class: "rank-ov", text: String(c.rank) })));
-  }
-  setTimeout(() => fig.classList.add("run"), 3500);   // don't hold the animation hostage to slow images
+    const li = el("li", { title: `Case ${c.uid}: ${caseTitle(c.groups)}` }, img, el("span", { class: "rank-ov", text: String(c.rank) }));
+    ol.append(li);
+    const loaded = img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = r; });
+    return { li, loaded };
+  });
+  // The scan starts as soon as the query X-ray is on screen (it is local and small); each match then
+  // appears in turn once the sweep has passed and its own image has arrived, so slow images never hold up the scan.
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    fig.classList.add("run");
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    items.forEach(({ li, loaded }, i) => {
+      setTimeout(() => loaded.then(() => li.classList.add("in")), reduced ? 0 : 1250 + i * 150);
+    });
+  };
+  if (q.complete && q.naturalWidth) start();
+  else { q.addEventListener("load", start, { once: true }); q.addEventListener("error", start, { once: true }); }
+  setTimeout(start, 1200);   // never wait longer than this for the query image
 }
 
 function buildStruggle(s) {
