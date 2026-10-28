@@ -229,7 +229,7 @@ function buildStruggle(s) {
     el("div", { class: "film", role: "button", tabindex: "0", "aria-label": "Open the X-ray full size",
       onclick: () => openViewer(s.image, `Study ${s.uid}: ${s.title}`, false),
       onkeydown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openViewer(s.image, `Study ${s.uid}: ${s.title}`, false); } } },
-      el("img", { src: s.image, alt: `Chest X-ray, study ${s.uid}`, loading: "lazy" }),
+      el("img", { src: s.image, alt: `Chest X-ray, study ${s.uid}` }),
       el("span", { class: "ov tl", text: `Study ${s.uid}` }), el("span", { class: "ov br", text: "Held-out test X-ray" })),
     el("div", {},
       el("h3", { text: s.title }),

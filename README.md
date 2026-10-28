@@ -56,7 +56,7 @@ data/splits.csv      fixed train/val/test split
 artifacts/           embeddings and ONNX models (not in git)
 tools/browser_bench/ in-browser encoder speed test
 frontend/            the website: site/ is published as-is (HTML, CSS, JS modules, data/);
-                     build.mjs copies ONNX Runtime Web + the font in; serve.py previews it locally
+                     build.mjs copies ONNX Runtime Web + the fonts in; serve.py previews it locally
 render.yaml          Render Blueprint: API web service + static site with the required headers
 ```
 
@@ -117,4 +117,4 @@ Live reports are capped at 60 a day (`CASEFINDER_DAILY_REPORTS`) so a crawler ca
 - Indiana University chest X-ray collection via Open-i (U.S. National Library of Medicine), CC BY-NC-ND 4.0. Library images re-shared unmodified at [tush-2ar/findxray-case-library](https://huggingface.co/datasets/tush-2ar/findxray-case-library).
 - RAD-DINO (Microsoft), MIT licence. BiomedCLIP (Microsoft). DINOv2 (Meta).
 - CheXbert labeller (Smit et al., 2020; Stanford AIMI weights, MIT) via `f1chexbert` for report evaluation.
-- ONNX Runtime Web (Microsoft, MIT). Archivo typeface (Omnibus-Type, SIL Open Font License).
+- ONNX Runtime Web (Microsoft, MIT). Instrument Serif and Instrument Sans typefaces (SIL Open Font License).
