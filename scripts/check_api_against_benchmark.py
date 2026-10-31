@@ -29,10 +29,7 @@ MODEL = "rad-dino-224"
 K = 10
 
 
-def post(url: str, payload: dict) -> dict:
-    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read())
+from keepalive_http import KeepAlive  # noqa: E402  (scripts/ is on sys.path when run as a script)
 
 
 def main() -> None:
@@ -54,13 +51,15 @@ def main() -> None:
     train_uids = splits.loc[splits["split"] == "train", "uid"].astype(int).tolist()
     lib_groups = [groups_of[u] for u in train_uids]
 
-    health = json.loads(urllib.request.urlopen(f"{args.url}/health").read())
+    client = KeepAlive(args.url)
+    status, _, raw = client.request("GET", "/health")
+    health = json.loads(raw)
     print("health:", health)
 
     p5, ap10, latencies, abnormal = [], [], [], []
     for u in test_uids:
         t = time.perf_counter()
-        res = post(f"{args.url}/search", {"embedding": emb[row_of[u]].tolist(), "k": K})["results"]
+        res = client.post_json("/search", {"embedding": emb[row_of[u]].tolist(), "k": K})["results"]
         latencies.append(1000 * (time.perf_counter() - t))
         q = groups_of[u]
         rel = [bool(q & set(r["groups"])) for r in res]
@@ -93,7 +92,8 @@ def main() -> None:
         ok &= abs(diff) < 1e-6
         print(f"{name:18s} {got:9.4f} {want:9.4f} {diff:+9.1e}")
     lat = np.array(latencies)
-    print(f"\nlatency per request (local, includes JSON of 768 floats): median {np.median(lat):.1f} ms, p95 {np.percentile(lat, 95):.1f} ms")
+    print(f"\nlatency per request, connection reused like a browser (includes network and JSON of 768 floats): "
+          f"median {np.median(lat):.1f} ms, p95 {np.percentile(lat, 95):.1f} ms")
     print("MATCH" if ok else "MISMATCH")
     sys.exit(0 if ok else 1)
 

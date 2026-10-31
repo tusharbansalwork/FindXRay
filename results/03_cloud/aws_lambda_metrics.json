@@ -1,0 +1,28 @@
+{
+  "window_minutes": 6,
+  "invocations": 3544,
+  "cold_starts": 5,
+  "cold_start_rate": 0.0014,
+  "init_ms_p50": 3653.7,
+  "init_ms_p95": 4584.9,
+  "max_memory_used_mb": 222.0,
+  "billed_gb_seconds": 62.36,
+  "endpoints": {
+    "/health": {
+      "requests": 6,
+      "server_ms_p50": 33.9,
+      "server_ms_p95": 37.5,
+      "server_ms_p99": 38.4,
+      "error_rate": 0.0
+    },
+    "/search": {
+      "requests": 3544,
+      "server_ms_p50": 2.3,
+      "server_ms_p95": 29.9,
+      "server_ms_p99": 43.5,
+      "error_rate": 0.0
+    }
+  },
+  "list_price_usd_per_1000_invocations": 0.00043,
+  "free_tier_note": "Always-free Lambda allowance: 1M requests and 400,000 GB-seconds a month."
+}

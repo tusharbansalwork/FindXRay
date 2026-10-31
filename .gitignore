@@ -20,3 +20,12 @@ frontend/node_modules/
 frontend/site/vendor/
 frontend/site/fonts/
 frontend/site/model.onnx
+build/
+deploy/aws/.terraform/
+deploy/aws/.build/
+deploy/aws/*.tfstate
+deploy/aws/*.tfstate.*
+deploy/aws/terraform.tfvars
+results/03_cloud/*.html
+deploy/aws/tfplan
+deploy/aws/plan.txt

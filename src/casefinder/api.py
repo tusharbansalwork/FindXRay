@@ -10,8 +10,11 @@ Environment:
   CASEFINDER_IMAGE_URL image URL template with {uid} (default: the public Hugging Face case library)
   CASEFINDER_LIBRARY_REPO  if the library folder is missing, download it from this Hugging Face dataset
                        (folder "library/"), e.g. tush-2ar/findxray-case-library
-  CASEFINDER_DAILY_REPORTS live reports allowed per day, counted per server process (default 60; 0 = no cap).
-                       The day resets at midnight Pacific time, when Gemini's free-tier daily quota resets.
+  CASEFINDER_DAILY_REPORTS live reports allowed per day (default 60; 0 = no cap). The day resets at
+                       midnight Pacific time, when Gemini's free-tier daily quota resets.
+  CASEFINDER_CAP_TABLE DynamoDB table for that count, shared by all instances (AWS Lambda); without it the
+                       count is kept in this process's memory (one server, e.g. Render).
+  FINDXRAY_SSM_PREFIX  load secrets (GEMINI_API_KEY, LANGFUSE_*) from SSM parameters under this path at start-up
   GEMINI_API_KEY       enables POST /report and /report/stream (draft report agent); GEMINI_MODEL picks the model
   LANGFUSE_*           enables tracing of report runs (see casefinder.agent.tracing)
 
@@ -29,7 +32,9 @@ import logging
 import math
 import os
 import queue
+import sys
 import threading
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -43,10 +48,26 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
 from casefinder.agent import ReportResult, XRayImage, run_report, stream_report
-from casefinder.agent.tracing import callback_handlers, trace_attributes, trace_url
+from casefinder.agent.tracing import callback_handlers, flush_traces, trace_attributes, trace_url
 from casefinder.search import CaseLibrary
 
 log = logging.getLogger("findxray")
+access_log = logging.getLogger("findxray.access")
+
+
+def _setup_logging() -> None:
+    """One JSON line per request on stdout (CloudWatch on Lambda, the Logs tab on Render), so latency and
+    errors can be measured per endpoint. Searches never log embeddings; nothing here identifies a visitor."""
+    if not access_log.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        access_log.addHandler(handler)
+        access_log.setLevel(logging.INFO)
+        access_log.propagate = False
+
+
+def log_event(**fields) -> None:
+    access_log.info(json.dumps({"event": "findxray", **fields}))
 
 DEFAULT_LIBRARY = Path(__file__).resolve().parents[2] / "artifacts" / "library"
 MAX_K = 20
@@ -155,10 +176,16 @@ class SearchResponse(BaseModel):
 def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        from casefinder.cloud import DynamoDailyCap, load_ssm_secrets
+        loaded = load_ssm_secrets()
+        if loaded:
+            log.info("loaded secrets from SSM: %s", ", ".join(sorted(loaded)))
         app.state.library = library or CaseLibrary.load(
             ensure_library(Path(os.environ.get("CASEFINDER_LIBRARY", DEFAULT_LIBRARY))))
         app.state.report_model = report_model
-        app.state.cap = DailyCap(int(os.environ.get("CASEFINDER_DAILY_REPORTS", "60")))
+        limit = int(os.environ.get("CASEFINDER_DAILY_REPORTS", "60"))
+        table = os.environ.get("CASEFINDER_CAP_TABLE")
+        app.state.cap = DynamoDailyCap(table, limit) if table else DailyCap(limit)
         yield
 
     app = FastAPI(title="FindXRay", version="0.1.0", lifespan=lifespan)
@@ -167,6 +194,16 @@ def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI
         raise ValueError("CASEFINDER_IMAGE_URL must contain {uid}")
     origins = [o.strip() for o in os.environ.get("CASEFINDER_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080").split(",") if o.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
+    _setup_logging()
+
+    @app.middleware("http")
+    async def request_log(request: Request, call_next):
+        t = time.perf_counter()
+        response = await call_next(request)
+        # For /report/stream this is the time to the first byte; the full run is logged as "report_done".
+        log_event(kind="request", method=request.method, path=request.url.path, status=response.status_code,
+                  ms=round(1000 * (time.perf_counter() - t), 1))
+        return response
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
@@ -175,13 +212,20 @@ def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI
         errors = [{"loc": list(e.get("loc", ())), "msg": e.get("msg", "invalid")} for e in exc.errors()]
         return JSONResponse(status_code=422, content={"detail": errors})
 
+    def reports_left():
+        try:
+            return app.state.cap.remaining()
+        except Exception:   # e.g. DynamoDB throttled: health must still answer
+            log.warning("could not read the report cap", exc_info=True)
+            return None
+
     @app.get("/health")
     def health():
         lib: CaseLibrary = app.state.library
         return {"status": "ok", "model": lib.model, "library_size": len(lib), "dim": lib.dim,
                 "reports_enabled": app.state.report_model is not None
                 or bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")),
-                "reports_left_today": app.state.cap.remaining()}
+                "reports_left_today": reports_left()}
 
     @app.post("/search", response_model=SearchResponse)
     def search(req: SearchRequest):
@@ -236,12 +280,14 @@ def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI
                                     callbacks=handlers)
         except Exception as e:  # model/network failures: don't leak internals to the browser
             log.exception("report generation failed")
+            flush_traces()
             if is_quota_error(e):
                 raise HTTPException(429, QUOTA_MESSAGE) from e
             raise HTTPException(502, f"the report model failed: {type(e).__name__}") from e
         url = trace_url(handlers)
         if url:
             log.info("report trace: %s", url)
+        flush_traces()
         return result
 
     @app.post("/report/stream")
@@ -253,6 +299,8 @@ def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI
         events: queue.Queue = queue.Queue()
         emb = np.asarray(req.embedding, dtype=np.float32)
 
+        started, outcome = time.perf_counter(), ["error"]
+
         def work():
             # One thread runs the whole graph, so the tracing context stays in place for every step.
             handlers = callback_handlers()
@@ -263,6 +311,7 @@ def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI
                             events.put({"event": "step", "step": item})
                         else:
                             events.put({"event": "result", "result": item.model_dump(mode="json")})
+                            outcome[0] = "ok"
             except Exception as e:
                 log.exception("report generation failed")
                 status, msg = (429, QUOTA_MESSAGE) if is_quota_error(e) else (502, f"the report model failed: {type(e).__name__}")
@@ -271,6 +320,8 @@ def create_app(library: CaseLibrary | None = None, report_model=None) -> FastAPI
                 url = trace_url(handlers)
                 if url:
                     log.info("report trace: %s", url)
+                flush_traces()   # before the stream closes: Lambda freezes the process right after
+                log_event(kind="report_done", ms=round(1000 * (time.perf_counter() - started), 1), outcome=outcome[0])
                 events.put(None)
 
         threading.Thread(target=work, daemon=True).start()

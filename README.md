@@ -12,7 +12,8 @@ Upload a chest X-ray and see the most similar past cases, what they were diagnos
 - [x] LangGraph report agent + Langfuse tracing (draft, second look, verify, revise; median 16 s per report on gemini-3.5-flash-lite)
 - [x] Report-quality evaluation: 50 held-out studies scored against radiologists' reports (CheXbert)
 - [x] Website: sample gallery, live upload (in-browser search + streamed report), results section
-- [ ] Deployed on Render (config ready: `render.yaml`)
+- [x] Deployed on Render (site + API)
+- [x] API on AWS Lambda (Terraform + GitHub Actions CI/CD): 720/720 benchmark queries reproduce the notebook exactly, 0 errors in 3.5k requests under load, $0/month (deploy/aws)
 
 ## Results
 ### Finding similar cases
@@ -112,6 +113,11 @@ from `/report/stream`. Samples are pre-computed from the final evaluation and ne
 4. Optional: keep the API awake by pinging `/health` every 10 minutes (e.g. cron-job.org).
 
 Live reports are capped at 60 a day (`CASEFINDER_DAILY_REPORTS`) so a crawler cannot use up the free Gemini quota.
+
+## Deploy the API on AWS (Lambda, free tier)
+The API also runs on AWS Lambda (arm64), provisioned with Terraform and deployed by GitHub Actions through
+OIDC, with a DynamoDB-backed report cap, secrets in SSM, CloudWatch alarms and a $1 budget kill switch.
+Runbook, cost table, load tests and SLOs: [deploy/aws/README.md](deploy/aws/README.md).
 
 ## Data and model credits
 - Indiana University chest X-ray collection via Open-i (U.S. National Library of Medicine), CC BY-NC-ND 4.0. Library images re-shared unmodified at [tush-2ar/findxray-case-library](https://huggingface.co/datasets/tush-2ar/findxray-case-library).

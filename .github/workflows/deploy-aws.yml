@@ -1,0 +1,68 @@
+name: Test and deploy API to AWS Lambda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/build_lambda.py"
+      - "scripts/smoke_test.py"
+      - "deploy/**"
+      - "pyproject.toml"
+      - ".github/workflows/deploy-aws.yml"
+  pull_request:
+    paths: ["src/**", "tests/**", "pyproject.toml"]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # only used when deploying with OIDC (AWS_DEPLOY_ROLE_ARN set)
+  contents: read
+
+concurrency:
+  group: deploy-aws
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -c deploy/constraints.txt -e ".[dev]"
+      - run: pytest -q
+
+  deploy:
+    needs: test
+    # Only on main, and only once the AWS setup is done (repository variables set; see deploy/aws/README.md).
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.FINDXRAY_API_URL != ''
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'ap-southeast-2' }}
+      FUNCTION: findxray-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy huggingface_hub
+      - name: Build the Lambda package (arm64)
+        run: python scripts/build_lambda.py --library-from-hf
+      # Free plan: a deploy-only IAM user's key in repository secrets (OIDC providers are blocked there).
+      # With advanced features: set AWS_DEPLOY_ROLE_ARN instead and remove the key secrets.
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy new code
+        run: |
+          aws lambda update-function-code --function-name "$FUNCTION" \
+            --zip-file fileb://build/findxray-lambda.zip --query 'LastUpdateStatus' --output text
+          aws lambda wait function-updated-v2 --function-name "$FUNCTION"
+      - name: Smoke test the live API
+        run: python scripts/smoke_test.py --url "${{ vars.FINDXRAY_API_URL }}"

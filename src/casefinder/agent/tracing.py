@@ -64,6 +64,17 @@ def trace_attributes(name: str = "findxray-report", tags: list[str] | None = Non
                                 metadata={k: str(v) for k, v in metadata.items()})
 
 
+def flush_traces() -> None:
+    """Send buffered traces now. Needed on AWS Lambda, which freezes the process as soon as the
+    response is finished, so anything still buffered would be lost. Never raises."""
+    if not langfuse_configured():
+        return
+    try:
+        langfuse_client().flush()
+    except Exception:
+        pass
+
+
 @contextmanager
 def flushing():
     """Make sure buffered traces are sent before a short-lived script exits."""
